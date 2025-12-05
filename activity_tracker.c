@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 
-Graphics_Context g_sContext;
+Graphics_Context* g_sContext;
 
 static uint16_t resultsBuffer[3];
 
@@ -31,6 +31,11 @@ uint32_t getTimeMs(void)
     return fakeTime += 40; // assume 25 Hz sampling
 }
 
+
+
+//Already initialized in main.c
+/*
+
 void _graphicsInit()
 {
     Crystalfontz128x128_Init();
@@ -42,43 +47,43 @@ void _graphicsInit()
     Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_NAVY);
     GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
     Graphics_clearDisplay(&g_sContext);
-}
+}*/
 
 void drawProgressBar(float percent)
 {
     Graphics_Rectangle outline = {20, 20, 108, 35};
-    Graphics_drawRectangle(&g_sContext, &outline);
+    Graphics_drawRectangle(g_sContext, &outline);
 
     int fillWidth = (int)(percent * (108 - 20) / 100.0);
     Graphics_Rectangle fill = {20, 20, 20 + fillWidth, 35};
-    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_GREEN);
-    Graphics_fillRectangle(&g_sContext, &fill);
+    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_GREEN);
+    Graphics_fillRectangle(g_sContext, &fill);
 
     char percentStr[10];
     sprintf(percentStr, "%.1f%%", percent);
-    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
-    Graphics_drawStringCentered(&g_sContext, (int8_t *)percentStr,
+    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_WHITE);
+    Graphics_drawStringCentered(g_sContext, (int8_t *)percentStr,
                                 AUTO_STRING_LENGTH, 64, 40, OPAQUE_TEXT);
 }
 
 void drawStepData(double magnitude, double thresholdHigh)
 {
     char buffer[20];
-    Graphics_clearDisplay(&g_sContext);
+    Graphics_clearDisplay(g_sContext);
 
     float progress = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
     drawProgressBar(progress);
 
     sprintf(buffer, "%lu", stepCount);
-    Graphics_drawStringCentered(&g_sContext, (int8_t *)buffer,
+    Graphics_drawStringCentered(g_sContext, (int8_t *)buffer,
                                 AUTO_STRING_LENGTH, 64, 70, OPAQUE_TEXT);
 
-    Graphics_drawStringCentered(&g_sContext, (int8_t *)"steps",
+    Graphics_drawStringCentered(g_sContext, (int8_t *)"steps",
                                 AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
 
     char debugStr[20];
     sprintf(debugStr, "Mag:%.0f Th:%.0f", magnitude, thresholdHigh);
-    Graphics_drawStringCentered(&g_sContext, (int8_t *)debugStr,
+    Graphics_drawStringCentered(g_sContext, (int8_t *)debugStr,
                                 AUTO_STRING_LENGTH, 64, 110, OPAQUE_TEXT);
 }
 
@@ -125,20 +130,25 @@ void _hwInit()
     CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
     CS_initClockSignal(CS_ACLK, CS_REFOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
-    _graphicsInit();
+    //_graphicsInit();
     _accelSensorInit();
 }
 
-void ADC14_IRQHandler(void)
+//void ADC14_IRQHandler(void)
+void activity_tracker_adc(uint64_t status, uint16_t* conversion_values)
 {
-    uint64_t status = ADC14_getEnabledInterruptStatus();
-    ADC14_clearInterruptFlag(status);
+    //uint64_t status = ADC14_getEnabledInterruptStatus();
+    //ADC14_clearInterruptFlag(status);
 
     if (status & ADC_INT2)
     {
-        resultsBuffer[0] = ADC14_getResult(ADC_MEM0); // X
+        /*resultsBuffer[0] = ADC14_getResult(ADC_MEM0); // X
         resultsBuffer[1] = ADC14_getResult(ADC_MEM1); // Y
-        resultsBuffer[2] = ADC14_getResult(ADC_MEM2); // Z
+        resultsBuffer[2] = ADC14_getResult(ADC_MEM2); // Z*/
+
+        resultsBuffer[0] = conversion_values[0];
+        resultsBuffer[1] = conversion_values[1];
+        resultsBuffer[2] = conversion_values[2];
 
         // calculate magnitude
         double magnitude = sqrt(
@@ -180,9 +190,12 @@ void ADC14_IRQHandler(void)
     }
 }
 
-int main(void)
+void activity_tracker(Graphics_Context *pContext)
 {
     _hwInit();
+
+    g_sContext = pContext;
+
     drawStepData(0, 0);
 
     while (1)

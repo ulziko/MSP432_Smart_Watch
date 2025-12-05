@@ -6,8 +6,11 @@
 
 #include <stdio.h>
 
-Graphics_Context g_sContext;
+Graphics_Context* g_sContext;
 
+
+
+/* This is not needed anymore: the display is initialized in main.c and the context is passed as parameter
 void LCD_init(void)
 {
     Crystalfontz128x128_Init();
@@ -25,7 +28,7 @@ void LCD_init(void)
                                 (int8_t *)"Time",
                                 AUTO_STRING_LENGTH,
                                 64, 20, OPAQUE_TEXT);
-}
+}*/
 
 void LCD_drawTime(void)
 {
@@ -34,11 +37,11 @@ void LCD_drawTime(void)
     sprintf(buffer, "%02d:%02d:%02d", t.hours, t.minutes, t.seconds);
 
     Graphics_Rectangle box = {20, 45, 108, 65};
-    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_NAVY);
-    Graphics_fillRectangle(&g_sContext, &box);
+    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_NAVY);
+    Graphics_fillRectangle(g_sContext, &box);
 
-    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
-    Graphics_drawStringCentered(&g_sContext,
+    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_WHITE);
+    Graphics_drawStringCentered(g_sContext,
                                 (int8_t *)buffer,
                                 AUTO_STRING_LENGTH,
                                 64, 55, OPAQUE_TEXT);
@@ -77,20 +80,25 @@ void RTC_C_IRQHandler(void)
     }
 }
 
-int main(void)
+void time_display(Graphics_Context *pContext)
 {
-    WDT_A_holdTimer();
+    //Get the context
+    g_sContext = pContext;
+
+
+    //Already done previosly
+    //WDT_A_holdTimer();
 
     /* Set system clock to 3 MHz */
     CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_3);
     CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
     CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
-    LCD_init();
+    //LCD_init();
     RTC_init();
 
     Interrupt_enableInterrupt(INT_RTC_C);
-    Interrupt_enableMaster();
+    Interrupt_enableMaster();   //I think this could me moved to main.c
 
     while (1)
     {
