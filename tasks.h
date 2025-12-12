@@ -11,7 +11,6 @@
 #include <ti/grlib/grlib.h>
 
 #include "time_display.h"
-#include "activity_tracker.h"
 
 
 #define DIM(x) (sizeof(x) / sizeof(*(x)))
@@ -21,7 +20,6 @@
 typedef void (*task_handler_t) (Graphics_Context *g_sContext);
 task_handler_t task_handlers[] = {
                                   time_display,
-                                  activity_tracker
 };
 
 
@@ -31,14 +29,11 @@ void no_op_adc_task(uint64_t status, uint16_t* conversionValues) {}
 typedef void (*adc_task_handler_t) (uint64_t status, uint16_t* conversionValues);
 adc_task_handler_t adc_task_handlers[] = {
                                   no_op_adc_task,
-                                  activity_tracker_adc
 };
 
 
 typedef enum {
     TIME_DISPLAY,
-    ACTIVITY_TRACKER,
-
     TASK_COUNT
 } tasks_t;
 
