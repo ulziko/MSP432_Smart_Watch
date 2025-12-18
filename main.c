@@ -3,12 +3,8 @@
 #include <ti/grlib/grlib.h>
 #include "LcdDriver/Crystalfontz128x128_ST7735.h"
 #include <stdio.h>
-
-
 #include "tasks.h"
-
-
-
+#include "system_time.h"
 
 
 #define STICK_DEAD_ZONE 1000
@@ -24,6 +20,9 @@
 
 uint16_t conversion_values[TOTAL_ADC_VALUES];
 
+TimeStruct ClockTime = {0, 0, 0, ""};
+DateStruct ClockDate = {0, 0, 0, ""};
+
 void reset_device() {
 
     //The watchdog timer will reset the device if a wrong password is inserted.
@@ -32,7 +31,6 @@ void reset_device() {
     //Loop until reset complete.
     while (1);
 }
-
 
 
 void initGraphics(Graphics_Context *g_sContext) {
@@ -67,6 +65,8 @@ void initGraphics(Graphics_Context *g_sContext) {
     Graphics_setBackgroundColor(g_sContext, GRAPHICS_COLOR_WHITE);
     GrContextFontSet(g_sContext, &g_sFontFixed6x8);
     Graphics_clearDisplay(g_sContext);
+    /* Reenabe the interrupt so that we get interrupt again*/
+    MAP_Interrupt_enableMaster();
 }
 
 
@@ -110,7 +110,23 @@ initADC() {
 }
 
 
-
+// this timer initializes the timer_A_Clocksource.
+void initTimer() {
+    // configuring Timer A as an UpMode
+    Timer_A_UpModeConfig upConfig = {
+        TIMER_A_CLOCKSOURCE_ACLK,
+        TIMER_A_CLOCKSOURCE_DIVIDER_1,
+        32767,  // 1 second (32768 - 1)
+        TIMER_A_TAIE_INTERRUPT_DISABLE,
+        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
+        TIMER_A_DO_CLEAR
+    };
+    MAP_Timer_A_configureUpMode(TIMER_A0_BASE, &upConfig);
+    MAP_Timer_A_clearTimer(TIMER_A0_BASE);
+    MAP_Interrupt_enableInterrupt(INT_TA0_0);
+    MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
+    syncTime();
+}
 
 
 tasks_t current_task = TIME_DISPLAY;
@@ -130,12 +146,15 @@ void main(void)
 
 	initGraphics(&g_sContext);
 
+	//Initialize timer
+	initTimer();
+
 	//initADC();
 
 
 	while (1) {
 	    if (current_task < TASK_COUNT)
-	        task_handlers[current_task] (&g_sContext);
+	        handlers[current_task].main_handler(&g_sContext);
 	    else
 	        //Something very wrong has happened. Reset everything.
 	        reset_device();
@@ -162,8 +181,21 @@ void ADC14_IRQHandler(void)
     for (i = 0; i < DIM(conversion_values); i ++)
         conversion_values[i] = 1 << i;
 
+    handlers[current_task].adc_handler(status, conversion_values);
+    //adc_task_handlers[current_task](status, conversion_values);
+}
 
-    adc_task_handlers[current_task](status, conversion_values);
+
+
+// Timer A0 interrupt - fires every 1 second
+void TA0_0_IRQHandler(void) {
+    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,
+                                            TIMER_A_CAPTURECOMPARE_REGISTER_0);
+
+    // Updates system time.
+    updateTime();
+    //
+    handlers[current_task].ta0_handler();
 }
 
 
