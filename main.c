@@ -127,6 +127,18 @@ void initTimer() {
 }
 
 
+
+void initStickPush() {
+    MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P4, GPIO_PIN1);
+
+    MAP_GPIO_enableInterrupt(GPIO_PORT_P4, GPIO_PIN1);
+
+    /* Enable interrupts on Port 1 (to catch P1.1 and P1.4 interrupts) */
+    Interrupt_enableInterrupt(INT_PORT4);
+}
+
+
+
 tasks_t current_task = TIME_DISPLAY;
 
 
@@ -143,6 +155,9 @@ void main(void)
 	Graphics_Context g_sContext;
 
 	initGraphics(&g_sContext);
+
+	//Initialize analog stick push button
+	initStickPush();
 
 	//Initialize timer
 	initTimer();
@@ -196,6 +211,21 @@ void TA0_0_IRQHandler(void) {
     handlers[current_task].ta0_handler();
 }
 
+
+void PORT4_IRQHandler(void) {
+
+
+    /* Check which pins generated the interrupts */
+    uint_fast16_t status = GPIO_getEnabledInterruptStatus(GPIO_PORT_P4);
+    /* clear interrupt flag (to clear pending interrupt indicator */
+    GPIO_clearInterruptFlag(GPIO_PORT_P4, status);
+
+
+    if (current_task == DIM(handlers) - 1)
+        current_task = 0;
+    else
+        current_task ++;
+}
 
 
 
