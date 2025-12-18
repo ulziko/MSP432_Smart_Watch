@@ -23,8 +23,8 @@
     } DateStruct;
 
     // Variables used accross the system
-    extern TimeStruct ClockTime;
-    extern DateStruct ClockDate;
+    TimeStruct ClockTime;
+    DateStruct ClockDate;
 
     void syncTime(void);
     // this function is called when our  TA0 interrupt happens

@@ -135,7 +135,7 @@ void main(void)
 
 	while (1) {
 	    if (current_task < TASK_COUNT)
-	        task_handlers[current_task] (&g_sContext);
+	        handlers[current_task].main_handler (&g_sContext);
 	    else
 	        //Something very wrong has happened. Reset everything.
 	        reset_device();
@@ -163,7 +163,7 @@ void ADC14_IRQHandler(void)
         conversion_values[i] = 1 << i;
 
 
-    adc_task_handlers[current_task](status, conversion_values);
+    handlers[current_task].adc_handler(status, conversion_values);
 }
 
 
