@@ -11,6 +11,7 @@
 #include <ti/grlib/grlib.h>
 
 #include "time_display.h"
+#include "activity_tracker.h"
 
 
 
@@ -34,14 +35,14 @@ void no_op_adc_task(uint64_t status, uint16_t* conversionValues) {}
 const t_task handlers[] = {
        {time_display, no_op_adc_task, time_display_TA0_handler},
      //{alarm_task, alarm_adc, alarm_timer},
-     //{step_counter_task, step_counter_adc, step_counter_timer}
+       {step_counter_task, step_counter_adc, step_counter_timer}
 };
-
 
 
 
 typedef enum {
     TIME_DISPLAY,
+    STEP_COUNTER,
     TASK_COUNT
 } tasks_t;
 
@@ -51,6 +52,5 @@ typedef enum {
 
 //If you get an error on the line below, make sure that thetask_handlers array matches the tasks in task_t.
 typedef char task_count_doesnt_matchtask_flag_count[(TASK_COUNT == DIM(handlers)) - 1];
-
 
 #endif /* TASKS_H_ */
