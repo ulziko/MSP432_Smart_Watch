@@ -194,8 +194,8 @@ void TA0_0_IRQHandler(void) {
 
     // Updates system time.
     updateTime();
-    //
-    handlers[current_task].ta0_handler();
+
+    handlers[current_task].adc_handler(status, conversion_values);
 }
 
 
