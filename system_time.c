@@ -1,6 +1,8 @@
 #include <time.h>
 #include "system_time.h"
 
+TimeStruct ClockTime = {0, 0, 0, ""};
+DateStruct ClockDate = {0, 0, 0, ""};
 
 // this  function syncs  time with local time
 void syncTime(){

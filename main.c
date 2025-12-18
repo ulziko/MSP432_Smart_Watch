@@ -20,8 +20,6 @@
 
 uint16_t conversion_values[TOTAL_ADC_VALUES];
 
-TimeStruct ClockTime = {0, 0, 0, ""};
-DateStruct ClockDate = {0, 0, 0, ""};
 
 void reset_device() {
 
@@ -195,7 +193,7 @@ void TA0_0_IRQHandler(void) {
     // Updates system time.
     updateTime();
 
-    handlers[current_task].adc_handler(status, conversion_values);
+    handlers[current_task].ta0_handler();
 }
 
 
