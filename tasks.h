@@ -10,6 +10,7 @@
 
 #include <ti/grlib/grlib.h>
 
+#include "main_page.h"
 #include "time_display.h"
 
 
@@ -20,37 +21,34 @@ typedef void (*task_handler_t) (Graphics_Context *g_sContext);
 typedef void (*adc_task_handler_t) (uint64_t status, uint16_t* conversionValues);
 // you can access to the system time by  global variable named LocalTime by including system_time.h header
 typedef void (*timer_TA0_handler_t) ();
-
-typedef struct {
-    task_handler_t main_handler;
-    adc_task_handler_t adc_handler;
-    timer_TA0_handler_t ta0_handler;
-}t_task;
-
-void no_op_adc_task(uint64_t status, uint16_t* conversionValues) {}
-
-
-
-const t_task handlers[] = {
-       {time_display, no_op_adc_task, time_display_TA0_handler},
-     //{alarm_task, alarm_adc, alarm_timer},
-     //{step_counter_task, step_counter_adc, step_counter_timer}
-};
-
+typedef void (*button_handler_t) ();
 
 
 
 typedef enum {
+    MAIN_PAGE,
     TIME_DISPLAY,
     TASK_COUNT
 } tasks_t;
 
-/*
-* Compile time error, declare an array of size -1 if the task count doesn't match the dimension of the array of tasks
-*/
 
-//If you get an error on the line below, make sure that thetask_handlers array matches the tasks in task_t.
-typedef char task_count_doesnt_matchtask_flag_count[(TASK_COUNT == DIM(handlers)) - 1];
+typedef struct {
+    task_handler_t main_handler;      //Main thread
+    adc_task_handler_t adc_handler;   //Adc handler (returns 3 values)
+    timer_TA0_handler_t ta0_handler;  //Timer handler
+    button_handler_t button1_handler; //Upper button handler (S1)
+    button_handler_t button2_handler; //Lower button handler (S2)
+    char task_name[15];
+    tasks_t task_enum;
+
+}t_task;
+
+void no_op_adc_task(uint64_t status, uint16_t* conversionValues);
+void no_op_task();
+
+
+extern tasks_t current_task;
+extern const t_task handlers[];
 
 
 #endif /* TASKS_H_ */

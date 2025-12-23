@@ -7,9 +7,6 @@
 #include "system_time.h"
 
 
-#define STICK_DEAD_ZONE 1000
-#define STICK_HORIZONTAL_THRESHOLD 1000
-#define ADC_MAX_VALUE (1 << 14)
 
 
 
@@ -68,7 +65,7 @@ void initGraphics(Graphics_Context *g_sContext) {
 }
 
 
-initADC() {
+void initADC() {
 
     /* Configures Pin 6.0 and 4.4 as ADC input */
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN0, GPIO_TERTIARY_MODULE_FUNCTION);
@@ -133,13 +130,28 @@ void initStickPush() {
 
     MAP_GPIO_enableInterrupt(GPIO_PORT_P4, GPIO_PIN1);
 
-    /* Enable interrupts on Port 1 (to catch P1.1 and P1.4 interrupts) */
+    /* Enable interrupts on Port 4 (P4.1 interrupts) */
     Interrupt_enableInterrupt(INT_PORT4);
+
+
+    MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P3, GPIO_PIN5);
+
+    MAP_GPIO_enableInterrupt(GPIO_PORT_P3, GPIO_PIN5);
+
+    /* Enable interrupts on Port 3 (to catch P3.5) */
+    Interrupt_enableInterrupt(INT_PORT3);
+
+
+    MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P5, GPIO_PIN1);
+
+    MAP_GPIO_enableInterrupt(GPIO_PORT_P5, GPIO_PIN1);
+
+    /* Enable interrupts on Port 5 (to catch P5.1) */
+    Interrupt_enableInterrupt(INT_PORT5);
 }
 
 
 
-tasks_t current_task = TIME_DISPLAY;
 
 
 
@@ -162,7 +174,7 @@ void main(void)
 	//Initialize timer
 	initTimer();
 
-	//initADC();
+	initADC();
 
 
 	while (1) {
@@ -189,10 +201,9 @@ void ADC14_IRQHandler(void)
     status = MAP_ADC14_getEnabledInterruptStatus();
     MAP_ADC14_clearInterruptFlag(status);
 
-
     uint32_t i;
     for (i = 0; i < DIM(conversion_values); i ++)
-        conversion_values[i] = 1 << i;
+        conversion_values[i] = ADC14_getResult(1 << i);
 
     handlers[current_task].adc_handler(status, conversion_values);
     //adc_task_handlers[current_task](status, conversion_values);
@@ -221,70 +232,26 @@ void PORT4_IRQHandler(void) {
     GPIO_clearInterruptFlag(GPIO_PORT_P4, status);
 
 
-    if (current_task == DIM(handlers) - 1)
-        current_task = 0;
-    else
-        current_task ++;
+    current_task = MAIN_PAGE;
 }
 
 
+void PORT3_IRQHandler(void) {
+    /* Check which pins generated the interrupts */
+    uint_fast16_t status = GPIO_getEnabledInterruptStatus(GPIO_PORT_P3);
+    /* clear interrupt flag (to clear pending interrupt indicator */
+    GPIO_clearInterruptFlag(GPIO_PORT_P3, status);
 
-void detect_stick_movement()
-{
-    uint64_t status;
-
-    status = MAP_ADC14_getEnabledInterruptStatus();
-    MAP_ADC14_clearInterruptFlag(status);
-
-
-
-
-    static uint32_t stick_released = 0;
+    handlers[current_task].button2_handler();
+}
 
 
+void PORT5_IRQHandler(void) {
+    /* Check which pins generated the interrupts */
+    uint_fast16_t status = GPIO_getEnabledInterruptStatus(GPIO_PORT_P5);
+    /* clear interrupt flag (to clear pending interrupt indicator */
+    GPIO_clearInterruptFlag(GPIO_PORT_P5, status);
 
-    /* ADC_MEM1 conversion completed */
-    if(status & ADC_INT1)
-    {
-
-        /* ADC results buffer */
-        uint16_t resultsBuffer[2];
-
-        //* Store ADC14 conversion results *
-        resultsBuffer[0] = ADC14_getResult(ADC_MEM0);
-        resultsBuffer[1] = ADC14_getResult(ADC_MEM1);
-
-
-
-        //Determine if the stick is released (x and y are both inside the deadzone)
-        stick_released |= ADC_MAX_VALUE / 2 - STICK_DEAD_ZONE < resultsBuffer[0] && resultsBuffer[0] < ADC_MAX_VALUE / 2 + STICK_DEAD_ZONE &&
-                ADC_MAX_VALUE / 2 - STICK_DEAD_ZONE < resultsBuffer[1] && resultsBuffer[1] < ADC_MAX_VALUE / 2 + STICK_DEAD_ZONE;
-
-
-
-        //If they went in the deadzone already...
-        if (stick_released) {
-
-            //Check if they are tilted
-            if (resultsBuffer[0] < STICK_HORIZONTAL_THRESHOLD) {
-
-                if (current_task >= TASK_COUNT)
-                    current_task = (tasks_t) 0;
-                else
-                    current_task ++;
-
-                stick_released = 0;
-            }
-            if (resultsBuffer[0] > ADC_MAX_VALUE - STICK_HORIZONTAL_THRESHOLD) {
-
-                if (current_task == 0)
-                    current_task = (tasks_t) (TASK_COUNT - 1);
-                else
-                    current_task --;
-
-                stick_released = 0;
-            }
-        }
-    }//*/
+    handlers[current_task].button1_handler();
 }
 
