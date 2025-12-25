@@ -9,11 +9,11 @@
 #define TASKS_H_
 
 #include <ti/grlib/grlib.h>
+#include <stdint.h>
 
 #include "main_page.h"
 #include "time_display.h"
-
-
+#include "alarm.h"
 
 #define DIM(x) (sizeof(x) / sizeof(*(x)))
 
@@ -28,6 +28,7 @@ typedef void (*button_handler_t) ();
 typedef enum {
     MAIN_PAGE,
     TIME_DISPLAY,
+    ALARM,
     TASK_COUNT
 } tasks_t;
 

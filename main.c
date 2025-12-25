@@ -7,9 +7,6 @@
 #include "system_time.h"
 
 
-
-
-
 #define WRONG_WD_PWD 0x00FF;
 
 
@@ -106,24 +103,38 @@ void initADC() {
 
 
 // this timer initializes the timer_A_Clocksource.
+//void initTimer() {
+//    // configuring Timer A as an UpMode
+//    Timer_A_UpModeConfig upConfig = {
+//        TIMER_A_CLOCKSOURCE_ACLK,
+//        TIMER_A_CLOCKSOURCE_DIVIDER_1,
+//        32767,  // 1 second (32768 - 1)
+//        TIMER_A_TAIE_INTERRUPT_DISABLE,
+//        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
+//        TIMER_A_DO_CLEAR
+//    };
+//    MAP_Timer_A_configureUpMode(TIMER_A0_BASE, &upConfig);
+//    MAP_Timer_A_clearTimer(TIMER_A0_BASE);
+//    MAP_Interrupt_enableInterrupt(INT_TA0_0);
+//    MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
+//    syncTime();
+//}
+
 void initTimer() {
-    // configuring Timer A as an UpMode
     Timer_A_UpModeConfig upConfig = {
         TIMER_A_CLOCKSOURCE_ACLK,
         TIMER_A_CLOCKSOURCE_DIVIDER_1,
-        32767,  // 1 second (32768 - 1)
+        32767,
         TIMER_A_TAIE_INTERRUPT_DISABLE,
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
         TIMER_A_DO_CLEAR
     };
-    MAP_Timer_A_configureUpMode(TIMER_A0_BASE, &upConfig);
-    MAP_Timer_A_clearTimer(TIMER_A0_BASE);
-    MAP_Interrupt_enableInterrupt(INT_TA0_0);
-    MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
+    MAP_Timer_A_configureUpMode(TIMER_A1_BASE, &upConfig);
+    MAP_Timer_A_clearTimer(TIMER_A1_BASE);
+    MAP_Interrupt_enableInterrupt(INT_TA1_0);
+    MAP_Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
     syncTime();
 }
-
-
 
 void initStickPush() {
     MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P4, GPIO_PIN1);
@@ -212,16 +223,21 @@ void ADC14_IRQHandler(void)
 
 
 // Timer A0 interrupt - fires every 1 second
-void TA0_0_IRQHandler(void) {
-    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,
-                                            TIMER_A_CAPTURECOMPARE_REGISTER_0);
+//void TA0_0_IRQHandler(void) {
+//    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,
+//                                            TIMER_A_CAPTURECOMPARE_REGISTER_0);
+//
+//    // Updates system time.
+//    updateTime();
+//
+//    handlers[current_task].ta0_handler();
+//}
 
-    // Updates system time.
+void TA1_0_IRQHandler(void) {
+    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
     updateTime();
-
     handlers[current_task].ta0_handler();
 }
-
 
 void PORT4_IRQHandler(void) {
 
