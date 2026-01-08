@@ -269,7 +269,7 @@ void alarm_adc(uint64_t status, uint16_t *conversionValues)
     }
 }
 
-void alarm_ta0_handler(void)
+void alarm_ta1_handler(void)
 {
     if (g_alarmSet && !g_alarmRinging &&
         ClockTime.hour == g_alarmHour &&

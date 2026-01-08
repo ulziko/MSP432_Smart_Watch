@@ -14,6 +14,7 @@
 #include "main_page.h"
 #include "time_display.h"
 #include "alarm.h"
+#include "game.h"
 
 #define DIM(x) (sizeof(x) / sizeof(*(x)))
 
@@ -21,6 +22,7 @@ typedef void (*task_handler_t) (Graphics_Context *g_sContext);
 typedef void (*adc_task_handler_t) (uint64_t status, uint16_t* conversionValues);
 // you can access to the system time by  global variable named LocalTime by including system_time.h header
 typedef void (*timer_TA0_handler_t) ();
+typedef void (*timer_TA1_handler_t) ();
 typedef void (*button_handler_t) ();
 
 
@@ -29,6 +31,7 @@ typedef enum {
     MAIN_PAGE,
     TIME_DISPLAY,
     ALARM,
+    GAME,
     TASK_COUNT
 } tasks_t;
 
@@ -37,6 +40,7 @@ typedef struct {
     task_handler_t main_handler;      //Main thread
     adc_task_handler_t adc_handler;   //Adc handler (returns 3 values)
     timer_TA0_handler_t ta0_handler;  //Timer handler
+    timer_TA1_handler_t ta1_handler;  //Timer handler
     button_handler_t button1_handler; //Upper button handler (S1)
     button_handler_t button2_handler; //Lower button handler (S2)
     char task_name[15];

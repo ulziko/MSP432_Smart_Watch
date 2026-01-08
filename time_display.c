@@ -41,6 +41,6 @@ void time_display(Graphics_Context *pContext){
 }
 
 // Called from timer interrupt in main.c
-void time_display_TA0_handler(void) {
+void time_display_ta1_handler(void) {
     timeUpdateFlag = 1;
 }

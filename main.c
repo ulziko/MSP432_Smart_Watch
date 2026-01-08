@@ -102,26 +102,26 @@ void initADC() {
 }
 
 
-// this timer initializes the timer_A_Clocksource.
-//void initTimer() {
-//    // configuring Timer A as an UpMode
-//    Timer_A_UpModeConfig upConfig = {
-//        TIMER_A_CLOCKSOURCE_ACLK,
-//        TIMER_A_CLOCKSOURCE_DIVIDER_1,
-//        32767,  // 1 second (32768 - 1)
-//        TIMER_A_TAIE_INTERRUPT_DISABLE,
-//        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
-//        TIMER_A_DO_CLEAR
-//    };
-//    MAP_Timer_A_configureUpMode(TIMER_A0_BASE, &upConfig);
-//    MAP_Timer_A_clearTimer(TIMER_A0_BASE);
-//    MAP_Interrupt_enableInterrupt(INT_TA0_0);
-//    MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
-//    syncTime();
-//}
 
-void initTimer() {
-    Timer_A_UpModeConfig upConfig = {
+void initTimer_TA_0() {
+    Timer_A_UpModeConfig ta0 = {
+            TIMER_A_CLOCKSOURCE_SMCLK,
+            TIMER_A_CLOCKSOURCE_DIVIDER_64,
+            32767,
+            TIMER_A_TAIE_INTERRUPT_DISABLE,
+            TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
+            TIMER_A_DO_CLEAR
+        };
+        MAP_Timer_A_configureUpMode(TIMER_A0_BASE, &ta0);
+        MAP_Timer_A_clearTimer(TIMER_A0_BASE);
+        MAP_Interrupt_enableInterrupt(INT_TA0_0);
+        MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
+}
+
+
+
+void initTimer_TA_1() {
+    Timer_A_UpModeConfig ta1 = {
         TIMER_A_CLOCKSOURCE_ACLK,
         TIMER_A_CLOCKSOURCE_DIVIDER_1,
         32767,
@@ -129,12 +129,15 @@ void initTimer() {
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
         TIMER_A_DO_CLEAR
     };
-    MAP_Timer_A_configureUpMode(TIMER_A1_BASE, &upConfig);
+    MAP_Timer_A_configureUpMode(TIMER_A1_BASE, &ta1);
     MAP_Timer_A_clearTimer(TIMER_A1_BASE);
     MAP_Interrupt_enableInterrupt(INT_TA1_0);
     MAP_Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
+
     syncTime();
 }
+
+
 
 void initStickPush() {
     MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P4, GPIO_PIN1);
@@ -163,9 +166,6 @@ void initStickPush() {
 
 
 
-
-
-
 /**
  * main.c
  */
@@ -182,8 +182,9 @@ void main(void)
 	//Initialize analog stick push button
 	initStickPush();
 
-	//Initialize timer
-	initTimer();
+	//Initialize timers
+	initTimer_TA_0();
+	initTimer_TA_1();
 
 	initADC();
 
@@ -196,7 +197,6 @@ void main(void)
 	        reset_device();
 	}
 }
-
 
 
 
@@ -217,27 +217,23 @@ void ADC14_IRQHandler(void)
         conversion_values[i] = ADC14_getResult(1 << i);
 
     handlers[current_task].adc_handler(status, conversion_values);
-    //adc_task_handlers[current_task](status, conversion_values);
 }
 
 
+void TA0_0_IRQHandler(void)
+{
+    Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+    // redraw
+    handlers[current_task].ta0_handler();
+}
 
-// Timer A0 interrupt - fires every 1 second
-//void TA0_0_IRQHandler(void) {
-//    MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,
-//                                            TIMER_A_CAPTURECOMPARE_REGISTER_0);
-//
-//    // Updates system time.
-//    updateTime();
-//
-//    handlers[current_task].ta0_handler();
-//}
 
 void TA1_0_IRQHandler(void) {
     MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
     updateTime();
-    handlers[current_task].ta0_handler();
+    handlers[current_task].ta1_handler();
 }
+
 
 void PORT4_IRQHandler(void) {
 

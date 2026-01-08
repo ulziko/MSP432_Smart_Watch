@@ -11,6 +11,6 @@
     void DrawTime(Graphics_Context *pContext);
     void DrawDate(Graphics_Context *pContext);
     void time_display(Graphics_Context *pContext);
-    void time_display_TA0_handler(void);
+    void time_display_ta1_handler(void);
 
 #endif /* TIME_DISPLAY_H_ */
