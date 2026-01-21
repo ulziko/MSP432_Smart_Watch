@@ -253,7 +253,6 @@ void PORT3_IRQHandler(void) {
     uint_fast16_t status = GPIO_getEnabledInterruptStatus(GPIO_PORT_P3);
     /* clear interrupt flag (to clear pending interrupt indicator */
     GPIO_clearInterruptFlag(GPIO_PORT_P3, status);
-
     handlers[current_task].button2_handler();
 }
 
@@ -263,7 +262,6 @@ void PORT5_IRQHandler(void) {
     uint_fast16_t status = GPIO_getEnabledInterruptStatus(GPIO_PORT_P5);
     /* clear interrupt flag (to clear pending interrupt indicator */
     GPIO_clearInterruptFlag(GPIO_PORT_P5, status);
-
     handlers[current_task].button1_handler();
 }
 
