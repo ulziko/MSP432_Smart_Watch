@@ -8,6 +8,7 @@
 #include <ti/grlib/grlib.h>
 #include "tasks.h"
 #include "main_page.h"
+#include "activity_tracker.h"
 
 tasks_t current_task = TIME_DISPLAY;
 
@@ -16,7 +17,7 @@ const t_task handlers[] = {
      {time_display, no_op_adc_task, no_op_task, time_display_ta1_handler , no_op_task, no_op_task, "Time Display", TIME_DISPLAY},
      {alarm_task, alarm_adc, no_op_task,  alarm_ta1_handler, alarm_button1_handler, alarm_button2_handler, "Alarm", ALARM},
      {game_task, no_op_adc_task, game_ta0_handler,  no_op_task, game_button1_handler, game_button2_handler, "Game", GAME},
-     //{step_counter_task, step_counter_adc, step_counter_timer}
+     {step_counter_task, step_counter_adc, step_counter_timer, no_op_task, no_op_task, no_op_task, "Step Counter", STEP_COUNTER }
 };
 
 void no_op_adc_task(uint64_t status, uint16_t* conversionValues) {
