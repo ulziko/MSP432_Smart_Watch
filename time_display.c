@@ -32,7 +32,7 @@ void time_display(Graphics_Context *pContext){
         Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
         Graphics_setBackgroundColor(pContext, MAIN_BACKGROUND_COLOR_BLUE);
         Graphics_clearDisplay(pContext);
-        init=false;
+        init_display=false;
     }
     // Check if timer interrupt set the update flag
     if (timeUpdateFlag) {
