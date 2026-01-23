@@ -123,9 +123,8 @@ void initTimer_TA_0() {
 void initTimer_TA_1() {
     Timer_A_UpModeConfig ta1 = {
         TIMER_A_CLOCKSOURCE_ACLK,
-        TIMER_A_CLOCKSOURCE_DIVIDER_64,
-//        32767,
-        64000,
+        TIMER_A_CLOCKSOURCE_DIVIDER_1,
+        32767,
         TIMER_A_TAIE_INTERRUPT_DISABLE,
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
         TIMER_A_DO_CLEAR
