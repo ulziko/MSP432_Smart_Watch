@@ -239,7 +239,6 @@ void game_button2_handler()
           default:
               break;
     }
-
 }
 
 

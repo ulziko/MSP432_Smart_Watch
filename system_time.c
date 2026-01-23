@@ -1,4 +1,5 @@
 #include <time.h>
+#include <stddef.h>
 #include "system_time.h"
 
 TimeStruct ClockTime = {0, 0, 0, ""};

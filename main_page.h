@@ -12,6 +12,7 @@
 #define STICK_DEAD_ZONE 1000
 #define STICK_HORIZONTAL_THRESHOLD 1000
 #define ADC_MAX_VALUE (1 << 14)
+#define MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 
 #include <ti/devices/msp432p4xx/inc/msp.h>
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>

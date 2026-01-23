@@ -8,8 +8,7 @@
 
 
 #define WRONG_WD_PWD 0x00FF;
-
-
+#define MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 #define TOTAL_ADC_VALUES 3
 
 uint16_t conversion_values[TOTAL_ADC_VALUES];
@@ -53,8 +52,8 @@ void initGraphics(Graphics_Context *g_sContext) {
 
     /* Initializes graphics context */
     Graphics_initContext(g_sContext, &g_sCrystalfontz128x128, &g_sCrystalfontz128x128_funcs);
-    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_RED);
-    Graphics_setBackgroundColor(g_sContext, GRAPHICS_COLOR_WHITE);
+    Graphics_setForegroundColor(g_sContext, GRAPHICS_COLOR_WHITE);
+    Graphics_setBackgroundColor(g_sContext, MAIN_BACKGROUND_COLOR_BLUE);
     GrContextFontSet(g_sContext, &g_sFontFixed6x8);
     Graphics_clearDisplay(g_sContext);
     /* Reenabe the interrupt so that we get interrupt again*/
