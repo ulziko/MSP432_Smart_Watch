@@ -95,12 +95,12 @@ void stick_tilted_down() {
 
 
 void set_colored_text() {
-    Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_RED);
+    Graphics_setForegroundColor(pContext, MAIN_BACKGROUND_COLOR_BLUE);
     Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_WHITE);
 }
 void set_colored_foreground() {
     Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
-    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_RED);
+    Graphics_setBackgroundColor(pContext, MAIN_BACKGROUND_COLOR_BLUE);
 }
 
 

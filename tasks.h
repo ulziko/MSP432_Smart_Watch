@@ -19,6 +19,7 @@
 
 
 #define DIM(x) (sizeof(x) / sizeof(*(x)))
+#define MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 
 typedef void (*task_handler_t) (Graphics_Context *g_sContext);
 typedef void (*adc_task_handler_t) (uint64_t status, uint16_t* conversionValues);

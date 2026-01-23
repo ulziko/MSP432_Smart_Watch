@@ -8,8 +8,7 @@
 #include "time_display.h"
 
 
-
-
+#define  MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 int timeUpdateFlag=1;
 
 void DrawTime(Graphics_Context *pContext)
@@ -28,6 +27,8 @@ void DrawDate(Graphics_Context *pContext)
 
 // called when task switched to the time_display
 void time_display(Graphics_Context *pContext){
+    Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
+    Graphics_setBackgroundColor(pContext, MAIN_BACKGROUND_COLOR_BLUE);
     // Check if timer interrupt set the update flag
     if (timeUpdateFlag) {
         timeUpdateFlag = 0;  // Clear flag
