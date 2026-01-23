@@ -21,7 +21,7 @@ volatile bool pipe_active = false;
 #define SCREEN_WIDTH  128
 #define GROUND_Y       0
 #define PIPE_RANDOMNESS 4
-#define GAP_BETWEEN_PIPES 40
+#define GAP_BETWEEN_PIPES 60
 
 // game score
 int score = 0;
@@ -49,7 +49,6 @@ extern const Graphics_Image  start_button4BPP_UNCOMP[];
 
 
 
-Graphics_Rectangle rect_old = {47, 52,  81, 77 };
 
 
 typedef struct {
@@ -78,7 +77,7 @@ void Init(Graphics_Context *pContext)
     flappy.y = 52;
     flappy.old_x=47;
     flappy.old_y=52;
-    flappy.w=34;
+    flappy.w=30;
     flappy.h=25;
 
     //Init pipe1
@@ -99,6 +98,8 @@ void Init(Graphics_Context *pContext)
 
     // pipe calculation
     pipe_active=true;
+    redraw = false;
+    init = false;
     pipe_index=0;
 
     // score restart
@@ -121,10 +122,6 @@ void restart_pipes(){
 }
 
 void redraw_game(Graphics_Context *pContext){
-    // Rectangle old
-    rect_old.yMin=flappy.old_y;
-    rect_old.yMax=flappy.old_y+flappy.h;
-    Graphics_fillRectangle(pContext, &rect_old);
     // draw flappy bird
     GrImageDraw(pContext, flappy_bird4BPP_UNCOMP, flappy.x, flappy.y);
     //draw upper road 1
@@ -160,10 +157,9 @@ void draw_screen_game_over(Graphics_Context *pContext){
 void game_task(Graphics_Context *pContext)
 {
     switch (current_state){
-    case STATE_START:
-        break;
     case STATE_GAME:
         if(init){
+            current_state= STATE_RESTART;
             Graphics_clearDisplay(pContext);
             init=false;
         }
@@ -196,14 +192,12 @@ void game_task(Graphics_Context *pContext)
             }
         }
         break;
-    case STATE_GAME_OVER:
-        break;
-
     case STATE_RESTART:
         Init(pContext);
-        init=true;
         draw_screen_start(pContext);
         current_state=STATE_START;
+        break;
+    default:
         break;
     }
 }
@@ -223,24 +217,28 @@ void game_ta0_handler(void)
 void game_button1_handler()
 {
     switch (current_state){
-        case STATE_START:
-            current_state=STATE_GAME;
-            break;
-        case STATE_GAME:
-           flappy.old_y=flappy.y;
-           flappy.y-=FLAP_FORCE;
-            break;
-        case STATE_GAME_OVER:
-            current_state=STATE_RESTART;
-            break;
-        case STATE_RESTART:
-           break;
-        }
+    case STATE_START:
+        current_state=STATE_GAME;
+        break;
+    case STATE_GAME:
+       flappy.old_y=flappy.y;
+       flappy.y-=FLAP_FORCE;
+        break;
+    default:
+        break;
+    }
 }
 
 
 void game_button2_handler()
 {
+    switch (current_state){
+          case STATE_GAME_OVER:
+              current_state=STATE_RESTART;
+              break;
+          default:
+              break;
+    }
 
 }
 
