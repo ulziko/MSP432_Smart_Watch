@@ -23,6 +23,7 @@
 #define BUZZER_PIN          GPIO_PIN7
 #define BUZZER_HZ           2000u
 
+#define GRAPHICS_COLOR_NAVYBLUE 0x00363E69
 static uint16_t g_buzzerPeriod = 0;
 
 /* Snooze duration */
@@ -41,7 +42,7 @@ int g_alarmMinute = 0;
 uint8_t g_alarmSet     = 0;  // 1 when alarm is set
 uint8_t g_alarmRinging = 0;  // 1 when alarm is currently ringing
 
-/* Joystick ADC results (A15 = X, A9 = Y) */
+/* Joy stick ADC results (A15 = X, A9 = Y) */
 volatile uint16_t g_joyX = 8192;
 volatile uint16_t g_joyY = 8192;
 
@@ -68,7 +69,7 @@ void drawCurrentTime(Graphics_Context *ctx)
     sprintf(buf, "%02d:%02d:%02d",
             ClockTime.hour, ClockTime.minute, ClockTime.second);
 
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     GrContextFontSet(ctx, &g_sFontFixed6x8);
     Graphics_drawStringCentered(ctx,
                                 (int8_t*)buf,
@@ -85,7 +86,7 @@ void drawAlarmScreen(Graphics_Context *ctx)
 
     /* Title under the time */
     GrContextFontSet(ctx, &g_sFontFixed6x8);
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     Graphics_drawStringCentered(ctx,
                                 (int8_t *)"ALARM",
                                 AUTO_STRING_LENGTH,
@@ -94,11 +95,11 @@ void drawAlarmScreen(Graphics_Context *ctx)
     /* Clear message area (y ~ 24-52) */
     msgArea.xMin = 0;  msgArea.yMin = 24;
     msgArea.xMax = 127; msgArea.yMax = 52;
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_NAVYBLUE);
     Graphics_fillRectangle(ctx, &msgArea);
 
-    Graphics_setBackgroundColor(ctx, GRAPHICS_COLOR_WHITE);
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+    Graphics_setBackgroundColor(ctx, GRAPHICS_COLOR_NAVYBLUE);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     if (g_alarmRinging)
     {
         Graphics_drawStringCentered(ctx,
@@ -169,7 +170,7 @@ void drawAlarmScreen(Graphics_Context *ctx)
 
     /* Selected hour in middle row */
     if (g_selectedField == 0)
-        Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+        Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     else
         Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_GRAY);
 
@@ -180,7 +181,7 @@ void drawAlarmScreen(Graphics_Context *ctx)
 
     /* Selected minute in middle row */
     if (g_selectedField == 1)
-        Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+        Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     else
         Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_GRAY);
 
@@ -193,11 +194,11 @@ void drawAlarmScreen(Graphics_Context *ctx)
     statusArea.xMin = 0;   statusArea.yMin = 100;
     statusArea.xMax = 127; statusArea.yMax = 127;
 
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_NAVYBLUE);
     Graphics_fillRectangle(ctx, &statusArea);
 
-    Graphics_setBackgroundColor(ctx, GRAPHICS_COLOR_WHITE);
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_BLACK);
+    Graphics_setBackgroundColor(ctx, GRAPHICS_COLOR_NAVYBLUE);
+    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
     if (g_alarmSet)
     {
         if (g_alarmRinging)
