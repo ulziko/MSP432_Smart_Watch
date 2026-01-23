@@ -5,23 +5,42 @@
 #include "LcdDriver/HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdbool.h>
+
 #include "activity_tracker.h"
+#include "system_time.h"
+
+#define AT_BG_COLOR GRAPHICS_COLOR_WHITE
+#define AT_TEXT_COLOR GRAPHICS_COLOR_RED
+#define AT_BAR_OUTLINE_COLOR GRAPHICS_COLOR_RED
+#define AT_BAR_FILL_COLOR GRAPHICS_COLOR_GREEN
+#define AT_DEBUG_COLOR GRAPHICS_COLOR_CYAN
+#define PEAK_THRESHOLD 180.0f
+#define REFRACTORY_MS 300
+#define STEP_LENGTH_CM 70.0
+#define GOAL_DISTANCE_CM 5000.0
+#define GRAVITY_ALPHA 0.98f
 
 static Graphics_Context *ctx = NULL;
-
-volatile uint32_t stepCount     = 0;
-volatile double   distance_cm   = 0.0;
-volatile uint32_t lastStepTime  = 0;
-volatile bool     stepDetected  = false;
-
-float   magBuffer[WINDOW_SIZE] = {0};
-uint32_t bufferIndex = 0;
-
+volatile uint32_t stepCount = 0;
+volatile double distance_cm = 0.0;
+volatile uint32_t lastStepTime = 0;
 static uint32_t timeMs = 0;
+static float gx = 0, gy = 0, gz = 0; // gravity estimate
+
+typedef enum {
+    STEP_IDLE,
+    STEP_ARMED
+} StepState;
+
+static StepState stepState = STEP_IDLE;
+static float peakValue = 0.0f;
+
 static inline uint32_t getTimeMs(void) {
     return timeMs;
 }
 
+// sample 25 Hz
 static inline float bandpassFilter(float input) {
     static float x1=0, x2=0, y1=0, y2=0;
     const float b0=0.2066f, b1=0.0f, b2=-0.2066f;
@@ -33,100 +52,153 @@ static inline float bandpassFilter(float input) {
     return y;
 }
 
+// progress bar display
 static void graphicsInit_once(Graphics_Context *pContext) {
-    Crystalfontz128x128_Init();
-    Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
-
-    Graphics_initContext(pContext, &g_sCrystalfontz128x128, &g_sCrystalfontz128x128_funcs);
-    Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
-    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_BLACK);
+    Graphics_initContext(pContext, &g_sCrystalfontz128x128,
+                         &g_sCrystalfontz128x128_funcs);
+    Graphics_setForegroundColor(pContext, AT_TEXT_COLOR);
+    Graphics_setBackgroundColor(pContext, AT_BG_COLOR);
     GrContextFontSet(pContext, &g_sFontFixed6x8);
     Graphics_clearDisplay(pContext);
+
+    Graphics_drawStringCentered(pContext, (int8_t*)"steps",
+        AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
 }
 
-//progress bar
-void drawStepData(double magnitude, double thresholdHigh) {
+static void updateProgressBar(double percent) {
     if (!ctx) return;
 
-    Graphics_clearDisplay(ctx);
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
 
-    double progress = 0.0;
-    if (GOAL_DISTANCE_CM > 0.0)
-        progress = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
-    if (progress < 0.0) progress = 0.0;
-    if (progress > 100.0) progress = 100.0;
+    Graphics_Rectangle area = {0, 0, 127, 50};
+    Graphics_setForegroundColor(ctx, AT_BG_COLOR);
+    Graphics_fillRectangle(ctx, &area);
 
-    Graphics_Rectangle outline = (Graphics_Rectangle){20, 20, 108, 35};
+    Graphics_Rectangle outline = {20, 20, 108, 35};
+    Graphics_setForegroundColor(ctx, AT_BAR_OUTLINE_COLOR);
     Graphics_drawRectangle(ctx, &outline);
 
-    int fillWidth = (int)(progress * (108 - 20) / 100.0);
-    Graphics_Rectangle fill = (Graphics_Rectangle){20, 20, 20 + fillWidth, 35};
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_GREEN);
-    Graphics_fillRectangle(ctx, &fill);
+    int fill = (int)(percent * (108 - 20) / 100.0);
+    Graphics_Rectangle bar = {20, 20, 20 + fill, 35};
+    Graphics_setForegroundColor(ctx, AT_BAR_FILL_COLOR);
+    Graphics_fillRectangle(ctx, &bar);
 
-    char percentStr[12];
-    sprintf(percentStr, "%.1f%%", progress);
-    Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_WHITE);
-    Graphics_drawStringCentered(ctx, (int8_t *)percentStr, AUTO_STRING_LENGTH, 64, 40, OPAQUE_TEXT);
-
-    /* Steps count */
-    char stepsStr[16];
-    sprintf(stepsStr, "%lu", (unsigned long)stepCount);
-    Graphics_drawStringCentered(ctx, (int8_t *)stepsStr, AUTO_STRING_LENGTH, 64, 70, OPAQUE_TEXT);
-    Graphics_drawStringCentered(ctx, (int8_t *)"steps", AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
-
-    /* Debug line */
-    char debugStr[32];
-    sprintf(debugStr, "Mag:%.0f Th:%.0f", magnitude, thresholdHigh);
-    Graphics_drawStringCentered(ctx, (int8_t *)debugStr, AUTO_STRING_LENGTH, 64, 104, OPAQUE_TEXT);
+    char txt[12];
+    sprintf(txt, "%.0f%%", percent);
+    Graphics_setForegroundColor(ctx, AT_TEXT_COLOR);
+    Graphics_drawStringCentered(ctx, (int8_t*)txt,
+        AUTO_STRING_LENGTH, 64, 40, OPAQUE_TEXT);
 }
 
-//ADC handler
-void step_counter_adc(uint64_t status, uint16_t *conversionValues) {
+static void updateStepText(void) {
+    if (!ctx) return;
+
+    Graphics_Rectangle area = {30, 60, 100, 80};
+    Graphics_setForegroundColor(ctx, AT_BG_COLOR);
+    Graphics_fillRectangle(ctx, &area);
+
+    char txt[16];
+    sprintf(txt, "%lu", (unsigned long)stepCount);
+    Graphics_setForegroundColor(ctx, AT_TEXT_COLOR);
+    Graphics_drawStringCentered(ctx, (int8_t*)txt, AUTO_STRING_LENGTH, 64, 70, OPAQUE_TEXT);
+}
+
+static void updateDebug(float signal) {
+    if (!ctx) return;
+
+    Graphics_Rectangle area = {0, 104, 127, 128};
+    Graphics_setForegroundColor(ctx, AT_BG_COLOR);
+    Graphics_fillRectangle(ctx, &area);
+
+    char txt[32];
+    sprintf(txt, "Sig:%.1f Th:%.0f", fabsf(signal), PEAK_THRESHOLD);
+    Graphics_setForegroundColor(ctx, AT_DEBUG_COLOR);
+    Graphics_drawStringCentered(ctx, (int8_t*)txt, AUTO_STRING_LENGTH, 64, 112, OPAQUE_TEXT);
+}
+
+// step detection
+void activity_tracker_init(void) {
+    stepCount = 0;
+    distance_cm = 0;
+    lastStepTime = 0;
+    timeMs = 0;
+    gx = gy = gz = 0;
+    stepState = STEP_IDLE;
+}
+
+void activity_tracker_adc_handler(uint64_t status, uint16_t *adc) {
     if (!(status & ADC_INT2)) return;
 
-    float x = (float)conversionValues[0];
-    float y = (float)conversionValues[1];
-    float z = (float)conversionValues[2];
+    float x = (float)adc[0];
+    float y = (float)adc[1];
+    float z = (float)adc[2];
 
-    //static offsets to remove gravity bias
-    static float ox=8000.0f, oy=8000.0f, oz=8000.0f;
-    x -= ox; y -= oy; z -= oz;
+    gx = GRAVITY_ALPHA * gx + (1 - GRAVITY_ALPHA) * x; // gravity removal
+    gy = GRAVITY_ALPHA * gy + (1 - GRAVITY_ALPHA) * y;
+    gz = GRAVITY_ALPHA * gz + (1 - GRAVITY_ALPHA) * z;
 
-    float magnitude = sqrtf(x*x + y*y + z*z);
+    x -= gx; y -= gy; z -= gz;
 
-    //peak detection
-    float filtered = bandpassFilter(magnitude);
-    float peak = fabsf(filtered);
+    float mag = sqrtf(x*x + y*y + z*z);
+    float signal = bandpassFilter(mag);
 
     uint32_t now = getTimeMs();
-    if (peak > PEAK_THRESHOLD && (now - lastStepTime) > REFRACTORY_MS) {
-        stepCount++;
-        distance_cm = stepCount * STEP_LENGTH_CM;
-        lastStepTime = now;
-        stepDetected = true;
-    } else {
-        stepDetected = false;
+    bool stepDetected = false;
+
+    switch (stepState) {
+
+    case STEP_IDLE:
+        if (signal > PEAK_THRESHOLD &&
+            (now - lastStepTime) > REFRACTORY_MS) {
+            stepState = STEP_ARMED;
+            peakValue = signal;
+        }
+        break;
+
+    case STEP_ARMED:
+        if (signal > peakValue)
+            peakValue = signal;
+
+        if (signal < 0.0f) {
+            stepCount++;
+            distance_cm = stepCount * STEP_LENGTH_CM;
+            lastStepTime = now;
+            stepState = STEP_IDLE;
+            stepDetected = true;
+        }
+        break;
     }
 
-    drawStepData(filtered, PEAK_THRESHOLD);
+    if (ctx && stepDetected) {
+        double prog = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
+        updateProgressBar(prog);
+        updateStepText();
+        updateDebug(signal);
+    }
 }
 
-//sampling timebase and sleep cadence
-void step_counter_timer(void) {
-    /* ~40 ms per sample at 25 Hz */
-    timeMs += 40;
+
+void activity_tracker_timer_tick(void) {
+    timeMs += 1000;
+
+    if (ClockTime.hour == 0 &&
+        ClockTime.minute == 0 &&
+        ClockTime.second == 0) {
+        stepCount = 0;
+        distance_cm = 0;
+    }
 }
 
-//main task function
 void step_counter_task(Graphics_Context *pContext) {
-    if (ctx == NULL) {
+    if (!ctx) {
         ctx = pContext;
         graphicsInit_once(ctx);
-        Graphics_clearDisplay(ctx);
-        drawStepData(0.0, PEAK_THRESHOLD);
+        updateProgressBar(0);
+        updateStepText();
     }
-
-    //sleep until next interrupt (ADC or timer)
     PCM_gotoLPM0();
 }
+
+void step_counter_adc(uint64_t s, uint16_t *v) {(void)s;(void)v;}
+void step_counter_timer(void) {}

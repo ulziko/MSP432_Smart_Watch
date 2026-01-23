@@ -15,6 +15,8 @@
 #include "time_display.h"
 #include "alarm.h"
 #include "game.h"
+#include "activity_tracker.h"
+
 
 #define DIM(x) (sizeof(x) / sizeof(*(x)))
 
@@ -32,6 +34,7 @@ typedef enum {
     TIME_DISPLAY,
     ALARM,
     GAME,
+    STEP_COUNTER,
     TASK_COUNT
 } tasks_t;
 
