@@ -229,6 +229,3 @@ void step_counter_reset_screen(void) {
     step_screen_init = false;
     ctx = NULL;
 }
-
-void step_counter_adc(uint64_t s, uint16_t *v) {(void)s;(void)v;}
-void step_counter_timer(void) {}
