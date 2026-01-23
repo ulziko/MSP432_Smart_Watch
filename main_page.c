@@ -105,9 +105,8 @@ void set_colored_foreground() {
 
 
 void draw_menu_text() {
-
+    Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
     Graphics_clearDisplay(pContext);
-
     int i;
     for (i = 1; i < TASK_COUNT; i ++) {
         if (i == chosen_task)
