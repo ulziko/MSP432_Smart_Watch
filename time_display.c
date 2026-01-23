@@ -10,7 +10,7 @@
 
 #define  MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 int timeUpdateFlag=1;
-int init=true;
+int init_display=true;
 
 void DrawTime(Graphics_Context *pContext)
 {
@@ -28,7 +28,7 @@ void DrawDate(Graphics_Context *pContext)
 
 // called when task switched to the time_display
 void time_display(Graphics_Context *pContext){
-    if(init){
+    if(init_display){
         Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_WHITE);
         Graphics_setBackgroundColor(pContext, MAIN_BACKGROUND_COLOR_BLUE);
         Graphics_clearDisplay(pContext);
