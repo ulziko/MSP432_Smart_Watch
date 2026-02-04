@@ -30,10 +30,6 @@ typedef enum {
 static step_state_t stepState = STEP_IDLE;
 static float peakValue = 0.0f;
 
-static inline uint32_t getTimeMs(void) {
-    return timeMs;
-}
-
 static inline float bandpassFilter(float input) {
     static float x1=0, x2=0, y1=0, y2=0;
     const float b0=0.2066f, b1=0.0f, b2=-0.2066f;
@@ -132,16 +128,33 @@ void activity_tracker_init(void) {
     stepState = STEP_IDLE;
 }
 
+void activity_tracker_timer_tick(void)
+{
+    if (current_task != STEP_COUNTER)
+        return;
+
+    timeMs += SAMPLE_PERIOD_MS;
+
+    // daily reset step count and distance at midnight
+    if (ClockTime.hour == 0 &&
+        ClockTime.minute == 0 &&
+        ClockTime.second == 0) {
+        stepCount = 0;
+        distance_cm = 0;
+    }
+}
+
 void activity_tracker_adc_handler(uint64_t status, uint16_t *v)
 {
     if (current_task != STEP_COUNTER) return;
 
     if (!(status & ADC_INT1)) return;
 
-    float x = (float)v[0];
-    float y = (float)v[1];
-    float z = (float)v[2];
+    float x = v[0];
+    float y = v[1];
+    float z = v[2];
 
+    // normalizing xyz values (removed gravity values)
     gx = GRAVITY_ALPHA * gx + (1.0f - GRAVITY_ALPHA) * x;
     gy = GRAVITY_ALPHA * gy + (1.0f - GRAVITY_ALPHA) * y;
     gz = GRAVITY_ALPHA * gz + (1.0f - GRAVITY_ALPHA) * z;
@@ -151,7 +164,7 @@ void activity_tracker_adc_handler(uint64_t status, uint16_t *v)
     float mag = sqrtf(x*x + y*y + z*z);
     float signal = bandpassFilter(mag);
 
-    uint32_t now = getTimeMs();
+    uint32_t now = timeMs;
     bool stepDetected = false;
 
     switch (stepState) {
@@ -180,28 +193,18 @@ void activity_tracker_adc_handler(uint64_t status, uint16_t *v)
         break;
     }
 
+    //update progress bar
     if (ctx) {
+//        updateDebug(signal);
+//        if (stepDetected) {
+//            double p = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
+//            updateStepCountText();
+//            updateProgressBar(p);
+//        }
+        double p = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
+        updateProgressBar(p);
+        updateStepCountText();
         updateDebug(signal);
-        if (stepDetected) {
-            double p = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
-            updateStepCountText();
-            updateProgressBar(p);
-        }
-    }
-}
-
-void activity_tracker_timer_tick(void)
-{
-    if (current_task != STEP_COUNTER)
-        return;
-
-    timeMs += SAMPLE_PERIOD_MS;
-
-    if (ClockTime.hour == 0 &&
-        ClockTime.minute == 0 &&
-        ClockTime.second == 0) {
-        stepCount = 0;
-        distance_cm = 0;
     }
 }
 
@@ -218,9 +221,11 @@ void step_counter_task(Graphics_Context *pContext)
         Graphics_clearDisplay(ctx);
 
         graphicsInit_once(ctx);
-        updateStepCountText();
-        updateProgressBar(0.0);
 
+        double p = (distance_cm / GOAL_DISTANCE_CM) * 100.0;
+        updateProgressBar(p);
+        updateStepCountText();
+        updateDebug(0.0f);
         step_screen_init = true;
     }
 }
@@ -229,6 +234,3 @@ void step_counter_reset_screen(void) {
     step_screen_init = false;
     ctx = NULL;
 }
-
-void step_counter_adc(uint64_t s, uint16_t *v) {(void)s;(void)v;}
-void step_counter_timer(void) {}
