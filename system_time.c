@@ -1,6 +1,8 @@
 #include <time.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "system_time.h"
+#include "alarm.h"
 
 TimeStruct ClockTime = {0, 0, 0, ""};
 DateStruct ClockDate = {0, 0, 0, ""};
@@ -34,6 +36,10 @@ void updateTime(){
             }
         }
     }
+    alarm_check();
 }
 
+int32_t alarmTriggered(void) {
+    return isAlarmRinging();
+}
 

@@ -229,6 +229,8 @@ void TA0_0_IRQHandler(void)
 void TA1_0_IRQHandler(void) {
     MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
     updateTime();
+    if (alarmTriggered())
+        current_task = ALARM;
     handlers[current_task].ta1_handler();
 }
 
