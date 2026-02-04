@@ -229,7 +229,7 @@ void ADC14_IRQHandler(void)
     status = MAP_ADC14_getEnabledInterruptStatus();
     MAP_ADC14_clearInterruptFlag(status);
 
-    if (current_task == STEP_COUNTER) {
+    if (current_task != STEP_COUNTER) {
         conversion_values[0] = ADC14_getResult(ADC_MEM0);
         conversion_values[1] = ADC14_getResult(ADC_MEM1);
 
