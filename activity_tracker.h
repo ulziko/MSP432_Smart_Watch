@@ -15,23 +15,28 @@
 #define GRAVITY_ALPHA      0.98f
 #define SAMPLE_RATE_HZ     25
 #define SAMPLE_PERIOD_MS   (1000 / SAMPLE_RATE_HZ)
+
 #ifdef SMCLK_FREQUENCY
 #define SAMPLE_PERIOD_TICKS  ((SMCLK_FREQUENCY / 64) / SAMPLE_RATE_HZ)
 #endif
 
-#define REFRACTORY_MS      300       // minimum time between steps
-#define PEAK_THRESHOLD     80.0f     // filtered peak threshold
-#define STEP_LENGTH_CM     3.0       // average step length 70cm
-#define GOAL_DISTANCE_CM   500.0     // 5 meters
+#define REFRACTORY_MS      300
+#define PEAK_THRESHOLD     8.0f
+#define STEP_LENGTH_CM     3.0
+#define GOAL_DISTANCE_CM   500.0
 
 extern volatile uint32_t stepCount;
 extern volatile double   distance_cm;
 
 void activity_tracker_init(void);
-void activity_tracker_timer_tick(void);   // ta1 handler
-void activity_tracker_adc_handler(uint64_t status, uint16_t *conversionValues);
+
+void activity_tracker_adc_handler(uint64_t status,
+                                  uint16_t *conversionValues);
+
+void activity_tracker_timer_tick(void);   // TA1 handler
 
 void step_counter_task(Graphics_Context *pContext);
 void step_counter_reset_screen(void);
+void step_counter_button_handler(void);
 
-#endif
+#endif /* ACTIVITY_TRACKER_H_ */
