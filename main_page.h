@@ -19,6 +19,9 @@
 #include <ti/grlib/grlib.h>
 #include "LcdDriver/Crystalfontz128x128_ST7735.h"
 
+#define TEXT_OFFSET 10
+#define TEXT_SPACING 25
+
 
 void main_page_task(Graphics_Context *pContext);
 
@@ -27,5 +30,6 @@ void main_page_adc(uint64_t status, uint16_t* conversionValues);
 
 void main_page_button();
 
+void main_page_exit();
 
 #endif /* MAIN_PAGE_H_ */

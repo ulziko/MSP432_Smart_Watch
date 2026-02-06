@@ -13,7 +13,7 @@
 tasks_t current_task = TIME_DISPLAY;
 
 const t_task handlers[] = {
-     {main_page_task, main_page_adc, no_op_task, no_op_task, main_page_button, main_page_button, no_op_task, "Main Page", MAIN_PAGE},
+     {main_page_task, main_page_adc, no_op_task, no_op_task, main_page_button, main_page_button, main_page_exit, "Main Page", MAIN_PAGE},
      {time_display, no_op_adc_task, no_op_task, time_display_ta1_handler , no_op_task, no_op_task, no_op_task, "Time Display", TIME_DISPLAY},
      {alarm_task, alarm_adc, no_op_task,  no_op_task, alarm_button1_handler, alarm_button2_handler, no_op_task, "Alarm", ALARM},
      {game_task, no_op_adc_task, game_ta0_handler,  no_op_task, game_button1_handler, game_button2_handler, no_op_task, "Game", GAME},

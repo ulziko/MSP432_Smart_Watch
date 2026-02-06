@@ -15,8 +15,7 @@
 
 Graphics_Context *pContext = 0;
 
-
-uint32_t chosen_task = TIME_DISPLAY;
+volatile uint32_t chosen_task = TIME_DISPLAY;
 
 
 void stick_tilted_up();
@@ -30,11 +29,15 @@ void draw_menu_text();
 
 
 void main_page_task(Graphics_Context *_pContext) {
-    //Draw the menu if this is the first time passing from here.
-    if (pContext == 0) {
-        pContext = _pContext;
-        draw_menu_text();
-    }
+    pContext = _pContext;
+
+    draw_menu_text();
+
+
+    Interrupt_enableSleepOnIsrExit();
+    PCM_gotoLPM0();
+
+    Graphics_clearDisplay(pContext);
 }
 
 
@@ -119,7 +122,7 @@ void draw_menu_text() {
                                         handlers[i].task_name,
                                         AUTO_STRING_LENGTH,
                                         64,
-                                        i * 25 + 25,
+                                        i * TEXT_SPACING + TEXT_OFFSET,
                                         OPAQUE_TEXT);
     }
 
@@ -129,7 +132,11 @@ void draw_menu_text() {
 
 void main_page_button() {
     current_task = handlers[chosen_task].task_enum;
-    Graphics_clearDisplay(pContext);
-    pContext = 0;
+    Interrupt_disableSleepOnIsrExit();
 }
+
+void main_page_exit() {
+    Interrupt_disableSleepOnIsrExit();
+}
+
 
