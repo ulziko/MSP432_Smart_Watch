@@ -269,6 +269,8 @@ void PORT4_IRQHandler(void) {
     /* clear interrupt flag (to clear pending interrupt indicator */
     GPIO_clearInterruptFlag(GPIO_PORT_P4, status);
 
+    handlers[current_task].exit_handler();
+
 
     current_task = MAIN_PAGE;
 }

@@ -47,6 +47,7 @@ typedef struct {
     timer_TA1_handler_t ta1_handler;  //Timer handler
     button_handler_t button1_handler; //Upper button handler (S1)
     button_handler_t button2_handler; //Lower button handler (S2)
+    button_handler_t exit_handler; //Lower button handler (S2)
     char task_name[15];
     tasks_t task_enum;
 
