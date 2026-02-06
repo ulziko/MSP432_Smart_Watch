@@ -114,13 +114,15 @@ void step_counter_task(Graphics_Context *pContext)
     if (current_task != STEP_COUNTER)
         return;
 
+    ctx = pContext;
+
     if (!screen_init) {
-        ctx = pContext;
+        Graphics_clearDisplay(ctx);
 
         Graphics_setForegroundColor(ctx, AT_BG_COLOR);
         Graphics_setBackgroundColor(ctx, AT_BG_COLOR);
+        GrContextFontSet(ctx, &g_sFontFixed6x8);
 
-        Graphics_clearDisplay(ctx);
         draw_static_ui();
 
         screen_init = true;
@@ -128,6 +130,8 @@ void step_counter_task(Graphics_Context *pContext)
     }
 
     if (redraw) {
+        Graphics_clearDisplay(ctx);
+        draw_static_ui();
         draw_dynamic_ui();
         draw_debug(last_signal);
         redraw = false;
@@ -137,23 +141,30 @@ void step_counter_task(Graphics_Context *pContext)
 void step_counter_reset_screen(void)
 {
     screen_init = false;
-    ctx = NULL;
+    redraw = false;
+}
+
+void step_counter_enter_task(void)
+{
+    screen_init = false;
+    redraw = true;
 }
 
 void activity_tracker_adc_handler(uint64_t status, uint16_t *v)
 {
-    if (current_task != STEP_COUNTER) return;
+    /* not checking current_task here */
     if (!(status & ADC_INT1)) return;
 
     timeMs += SAMPLE_PERIOD_MS;
-
     float x = v[0], y = v[1], z = v[2];
 
     gx = GRAVITY_ALPHA * gx + (1.0f - GRAVITY_ALPHA) * x;
     gy = GRAVITY_ALPHA * gy + (1.0f - GRAVITY_ALPHA) * y;
     gz = GRAVITY_ALPHA * gz + (1.0f - GRAVITY_ALPHA) * z;
 
-    x -= gx; y -= gy; z -= gz;
+    x = x - gx;
+    y = y - gy;
+    z = z - gz;
 
     float mag = sqrtf(x*x + y*y + z*z);
     float signal = bandpassFilter(mag);
