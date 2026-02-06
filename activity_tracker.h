@@ -21,9 +21,9 @@
 #endif
 
 #define REFRACTORY_MS      300
-#define PEAK_THRESHOLD     8.0f
-#define STEP_LENGTH_CM     3.0
-#define GOAL_DISTANCE_CM   500.0
+#define PEAK_THRESHOLD     10.0f
+#define STEP_LENGTH_CM     10
+#define GOAL_DISTANCE_CM   500000.0
 
 extern volatile uint32_t stepCount;
 extern volatile double   distance_cm;
@@ -37,6 +37,7 @@ void activity_tracker_timer_tick(void);   // TA1 handler
 
 void step_counter_task(Graphics_Context *pContext);
 void step_counter_reset_screen(void);
+void step_counter_enter_task(void);
 void step_counter_button_handler(void);
 
 #endif /* ACTIVITY_TRACKER_H_ */
