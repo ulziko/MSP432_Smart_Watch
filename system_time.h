@@ -5,6 +5,9 @@
  *      Author: Ulzii
  */
 
+#include <stdint.h>
+
+
 #ifndef SYSTEM_TIME_H_
 #define SYSTEM_TIME_H_
 
@@ -27,4 +30,5 @@
     void syncTime(void);
     // this function is called when our  TA0 interrupt happens
     void updateTime(void);
+    int32_t alarmTriggered(void);
 #endif /* SYSTEM_TIME_H_ */
