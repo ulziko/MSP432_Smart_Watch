@@ -9,7 +9,7 @@
 
 // toggle value for updating purpose
 volatile bool redraw = false;
-volatile bool init = false;
+volatile bool initialized = false;
 volatile bool pipe_active = false;
 
 
@@ -33,7 +33,7 @@ int shifter[PIPE_RANDOMNESS]={-10, -50, -20, -40};
 
 
 //states
-GameState current_state= STATE_RESTART;
+GameState current_state= STATE_START;
 
 
 ////image declerations
@@ -60,6 +60,7 @@ typedef struct {
     int h;
 } Sprite;
 
+
 Sprite flappy;
 Sprite pipe1;
 Sprite pipe2;
@@ -72,6 +73,7 @@ void Init(Graphics_Context *pContext)
 {
     Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_AQUA);
     Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
+    Graphics_clearDisplay(pContext);
     //Init flappy
     flappy.x = 47;
     flappy.y = 52;
@@ -157,12 +159,16 @@ void draw_screen_game_over(Graphics_Context *pContext){
 void game_task(Graphics_Context *pContext)
 {
     switch (current_state){
+    case STATE_START:
+            if(first_time){
+                
+                current_state= STATE_RESTART;
+                Init(Graphics_Context *pContext);
+                first_time=false;
+            }
+        break;
     case STATE_GAME:
-        if(init){
-            current_state= STATE_RESTART;
-            Graphics_clearDisplay(pContext);
-            init=false;
-        }
+            
         if (redraw){
             pipe1.x-=PIPE_SPEED;
             pipe2.x-=PIPE_SPEED;
@@ -194,7 +200,6 @@ void game_task(Graphics_Context *pContext)
         break;
     case STATE_RESTART:
         Init(pContext);
-        draw_screen_start(pContext);
         current_state=STATE_START;
         break;
     default:

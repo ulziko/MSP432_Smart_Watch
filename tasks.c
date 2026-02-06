@@ -17,7 +17,7 @@ const t_task handlers[] = {
      {time_display, no_op_adc_task, no_op_task, time_display_ta1_handler , no_op_task, no_op_task, "Time Display", TIME_DISPLAY},
      {alarm_task, alarm_adc, no_op_task,  no_op_task, alarm_button1_handler, alarm_button2_handler, "Alarm", ALARM},
      {game_task, no_op_adc_task, game_ta0_handler,  no_op_task, game_button1_handler, game_button2_handler, "Game", GAME},
-     {step_counter_task, activity_tracker_adc_handler, no_op_task, activity_tracker_timer_tick, step_counter_button_handler, no_op_task, "Steps", STEP_COUNTER},
+     {step_counter_task, activity_tracker_adc_handler, no_op_task, activity_tracker_timer_tick, no_op_task, no_op_task, "Steps", STEP_COUNTER},
 };
 
 void no_op_adc_task(uint64_t status, uint16_t* conversionValues) {

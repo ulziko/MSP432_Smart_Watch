@@ -16,5 +16,6 @@ void alarm_task(Graphics_Context *ctx);
 void alarm_check(void);
 void alarm_button1_handler(void);   // S1 (P5.1)
 void alarm_button2_handler(void);   // S2 (P3.5)
+int32_t isAlarmRinging(void);
 
 #endif /* ALARM_H_ */

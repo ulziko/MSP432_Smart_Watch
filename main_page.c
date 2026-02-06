@@ -129,6 +129,7 @@ void draw_menu_text() {
 
 void main_page_button() {
     current_task = handlers[chosen_task].task_enum;
+    Graphics_clearDisplay(pContext);
     pContext = 0;
 }
 
