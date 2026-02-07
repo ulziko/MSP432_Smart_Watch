@@ -17,6 +17,7 @@ volatile bool pipe_active=false;
 volatile int score=0;
 volatile int pipe_index;
 volatile bool draw_screen_start_flag=true;
+volatile bool clear_screen_flag=false;
 
 // game score
 char score_string[10];
@@ -29,7 +30,6 @@ GameState game_current_state= STATE_RESTART;
 /**
  * @brief  Initialize game variables  and  sprite positions.
  *
- * @param  pContext  Graphics context pointer.
  *
  * @return Does not return a value.
  *
@@ -37,11 +37,8 @@ GameState game_current_state= STATE_RESTART;
  *        and pipes, as well as initializes game state variables such as score and
  *        pipe activity status.
  */
-void Init(Graphics_Context *pContext)
+void Init()
 {   
-    // clear the screen
-    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
-    Graphics_clearDisplay(pContext);
     //Init flappy
     flappy.x = 47;
     flappy.y = 52;
@@ -76,6 +73,11 @@ void Init(Graphics_Context *pContext)
     score=0;
 }
 
+
+/**
+ * @brief  Restart the pipes by resetting their positions and updating the pipe index for randomness
+ *
+ */
 void restart_pipes(){
     // restart the value
     if (pipe_index>=PIPE_RANDOMNESS){
@@ -100,7 +102,15 @@ void redraw_game(Graphics_Context *pContext){
     GrImageDraw(pContext, down_road4BPP_UNCOMP, pipe2.x, pipe2.y);
 }
 
-
+/**
+ * @brief  Draw the start screen with the flappy bird and start button
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the flappy bird
+ */
 void draw_screen_start(Graphics_Context *pContext){
     Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
     Graphics_clearDisplay(pContext);
@@ -110,7 +120,15 @@ void draw_screen_start(Graphics_Context *pContext){
     GrImageDraw(pContext, start_button4BPP_UNCOMP, 39 , 80);
 }
 
-
+/**
+ * @brief  Draw the game over screen with the final score
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the flappy bird
+ */
 void draw_screen_game_over(Graphics_Context *pContext){
     Graphics_clearDisplay(pContext);
     Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_ORANGE);
@@ -121,8 +139,32 @@ void draw_screen_game_over(Graphics_Context *pContext){
     Graphics_drawStringCentered(pContext, (int8_t*)score_string, AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
 }
 
+/**
+ * @brief  Draw the get ready screen 
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the get ready image
+ */
+void draw_screen_get_ready(Graphics_Context *pContext){
+    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
+    Graphics_clearDisplay(pContext);
+    // image is in image.c
+    GrImageDraw(pContext, get_ready4BPP_UNCOMP, 16, 46);
+}
 
 
+/**
+ * @brief  Main game task handler that updates the game state and redraws the screen based on the current game state
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function handles the main game loop, updating the positions of the flappy bird and pipes, checking for collisions, and managing the game state transitions between start, playing, and game over screens.
+ */
 void game_task(Graphics_Context *pContext)
 {
     switch (game_current_state){
@@ -135,10 +177,15 @@ void game_task(Graphics_Context *pContext)
         PCM_gotoLPM0();
         break;
     case STATE_INIT:
-        Init(pContext);
-        game_current_state=STATE_PLAYING;
+        Init();
+        draw_screen_get_ready(pContext);
+        game_current_state=STATE_GET_READY;
         break;
     case STATE_PLAYING:
+        if (clear_screen_flag){
+            Graphics_clearDisplay(pContext);
+            clear_screen_flag=false;
+        }
         if (game_redraw){
             // Flapp bird will fall down by gravity.
             flappy.old_y=flappy.y;
@@ -184,7 +231,12 @@ void game_task(Graphics_Context *pContext)
 }
 
 
+/**
+ * @brief  Game timer TA0 interrupt handler 
 
+ *  
+ * @note  This function toggles a value to draw redraw the game screen.
+ */
 void game_ta0_handler(void)
 {
     GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0);
@@ -195,6 +247,33 @@ void game_ta0_handler(void)
 }
 
 
+/**
+ * @brief  Game timer TA1 interrupt handler 
+
+ *  
+ * @note  This function is used to control the get ready screen. 
+ */
+void game_ta1_handler(void)
+{
+    if (game_current_state == STATE_GET_READY) {
+        // after 3 seconds, start the game
+        static int counter = 0;
+        counter++;
+        if (counter >= 3) {
+            counter = 0;
+            clear_screen_flag=true;
+            game_current_state = STATE_PLAYING;
+        }   
+    }
+}
+
+
+/**
+ * @brief  Game button 1 interrupt handler
+
+ *  
+ * @note  Button 1 is used to start the game and make the bird flap. 
+ */
 void game_button1_handler()
 {
     switch (game_current_state){
@@ -213,7 +292,12 @@ void game_button1_handler()
     }
 }
 
+/**
+ * @brief  Game button 2 interrupt handler
 
+ *  
+ * @note  Button 2 is used to restart the game when the game is over.
+ */
 void game_button2_handler()
 {
     if (game_current_state==STATE_GAME_OVER){
@@ -225,7 +309,12 @@ void game_button2_handler()
 
 
 
+/**
+ * @brief  Game exit handler, called from the main menu
 
+ *  
+ * @note  This function resets the game state to restart and sets the flag to draw the start screen when exiting the game from the main menu.
+ */
 void game_exit_handler(){
     draw_screen_start_flag=true;
     game_current_state=STATE_RESTART;
