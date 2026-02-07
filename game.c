@@ -12,20 +12,18 @@ Sprite pipe1;
 Sprite pipe2;
 
 // toggle value for updating purpose
-volatile bool game_redraw;
-volatile bool pipe_active;
-volatile int score;
+volatile bool game_redraw=false;
+volatile bool pipe_active=false;
+volatile int score=0;
 volatile int pipe_index;
-volatile bool draw_screen_start_flag;
-
-static Graphics_Context *ctx_game = NULL;
+volatile bool draw_screen_start_flag=true;
 
 // game score
 char score_string[10];
 const int shifter[PIPE_RANDOMNESS] = {-10, -50, -20, -40};
 
 // Game initial state
-GameState game_current_state= STATE_INIT;
+GameState game_current_state= STATE_RESTART;
 
 
 /**
@@ -41,6 +39,7 @@ GameState game_current_state= STATE_INIT;
  */
 void Init(Graphics_Context *pContext)
 {   
+    // clear the screen
     Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
     Graphics_clearDisplay(pContext);
     //Init flappy
@@ -71,6 +70,7 @@ void Init(Graphics_Context *pContext)
     pipe_active=true;
     game_redraw = false;
     pipe_index=0;
+    draw_screen_start_flag=true;
 
     // score restart
     score=0;
@@ -126,22 +126,18 @@ void draw_screen_game_over(Graphics_Context *pContext){
 void game_task(Graphics_Context *pContext)
 {
     switch (game_current_state){
-
-    case STATE_START:
-        if (draw_screen_start_flag){
-            // draw the start screen
-            draw_screen_start(pContext);
-            // toggle the flag to avoid redrawing
-            draw_screen_start_flag=false;
-            // wake on button interrupt
-            PCM_gotoLPM0();
-        }
+    case STATE_RESTART:
+    if (draw_screen_start_flag){
+        draw_screen_start(pContext);
+        draw_screen_start_flag=false;
+    }
+    game_current_state=STATE_START;
+        PCM_gotoLPM0();
         break;
     case STATE_INIT:
         Init(pContext);
         game_current_state=STATE_PLAYING;
         break;
-    
     case STATE_PLAYING:
         if (game_redraw){
             // Flapp bird will fall down by gravity.
@@ -191,6 +187,7 @@ void game_task(Graphics_Context *pContext)
 
 void game_ta0_handler(void)
 {
+    GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0);
     // if the game is in playing state, update the position of the bird and set the redraw flag
     if (game_current_state == STATE_PLAYING) {
         game_redraw = true;
@@ -222,7 +219,7 @@ void game_button2_handler()
     if (game_current_state==STATE_GAME_OVER){
         // button 2 is used to restart the game when the game is over
         draw_screen_start_flag=true;
-        game_current_state=STATE_START;
+        game_current_state=STATE_RESTART;
     }
 }
 
@@ -231,5 +228,5 @@ void game_button2_handler()
 
 void game_exit_handler(){
     draw_screen_start_flag=true;
-    game_current_state=STATE_START;
+    game_current_state=STATE_RESTART;
 }
