@@ -50,3 +50,7 @@ void time_display(Graphics_Context *pContext){
 void time_display_ta1_handler(void) {
     timeUpdateFlag = 1;
 }
+
+void time_display_exit() {
+    init_display = true;
+}
