@@ -5,10 +5,10 @@
 #include "LcdDriver/HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h"
 #include <stdio.h>
 #include "system_time.h"
+#include "tasks.h"
 #include "time_display.h"
 
 
-#define  MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 int timeUpdateFlag=1;
 int init_display=true;
 

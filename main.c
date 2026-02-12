@@ -8,7 +8,6 @@
 
 
 #define WRONG_WD_PWD 0x00FF;
-#define MAIN_BACKGROUND_COLOR_BLUE  0x00363E69
 #define TOTAL_ADC_VALUES 3
 
 uint16_t conversion_values[TOTAL_ADC_VALUES];
