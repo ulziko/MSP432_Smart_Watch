@@ -16,6 +16,7 @@ volatile bool game_redraw=false;
 volatile bool pipe_active=false;
 volatile int score=0;
 volatile int pipe_index;
+volatile int  pipe_speed;
 volatile bool draw_screen_start_flag=true;
 volatile bool clear_screen_flag=false;
 
@@ -71,6 +72,7 @@ void Init()
 
     // score restart
     score=0;
+    pipe_speed=1;
 }
 
 
@@ -89,6 +91,7 @@ void restart_pipes(){
     }
     pipe1.x=SCREEN_WIDTH+pipe1.w;
     pipe2.x=SCREEN_WIDTH+pipe2.w;
+
     pipe_active=true;
     pipe_index++;
 }
@@ -115,7 +118,7 @@ void draw_screen_start(Graphics_Context *pContext){
     Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
     Graphics_clearDisplay(pContext);
     // flappy bird at the top
-    GrImageDraw(pContext, flappy_bird4BPP_UNCOMP, 47, 52);
+    GrImageDraw(pContext, flappy_bird4BPP_UNCOMP, 47, 46);
     // starting button of entering section
     GrImageDraw(pContext, start_button4BPP_UNCOMP, 39 , 80);
 }
@@ -191,8 +194,8 @@ void game_task(Graphics_Context *pContext)
             flappy.old_y=flappy.y;
             flappy.y+=GRAVITY;
             // Pipes will move to the left by pipe speed.
-            pipe1.x-=PIPE_SPEED;
-            pipe2.x-=PIPE_SPEED;
+            pipe1.x-=pipe_speed;
+            pipe2.x-=pipe_speed;
             // redraw the game 
             redraw_game(pContext);
             game_redraw=false;
@@ -255,15 +258,25 @@ void game_ta0_handler(void)
  */
 void game_ta1_handler(void)
 {
-    if (game_current_state == STATE_GET_READY) {
-        // after 3 seconds, start the game
-        static int counter = 0;
-        counter++;
-        if (counter >= 3) {
-            counter = 0;
-            clear_screen_flag=true;
+    static int counter = 0;
+    counter++;
+    switch (game_current_state){
+    case STATE_GET_READY:
+        // after 3 seconds, start the game        static int counter = 0;
+        if (counter >= 3) {                                   
+            clear_screen_flag=true;            
             game_current_state = STATE_PLAYING;
-        }   
+        }
+        break;
+    case STATE_PLAYING:
+        if (counter >= 20) {
+            pipe_speed++;
+        }
+        // gravity will be more effective every 30 seconds to make the game more difficult
+        else if (counter >= 30) { 
+            
+        }
+   
     }
 }
 
@@ -316,6 +329,6 @@ void game_button2_handler()
  * @note  This function resets the game state to restart and sets the flag to draw the start screen when exiting the game from the main menu.
  */
 void game_exit_handler(){
-    draw_screen_start_flag=true;
     game_current_state=STATE_RESTART;
+    draw_screen_start_flag=true;
 }
