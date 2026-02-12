@@ -125,6 +125,7 @@ void initTimer_TA_0() {
             TIMER_A_CLOCKSOURCE_SMCLK,
             TIMER_A_CLOCKSOURCE_DIVIDER_64,
             32767,
+
             TIMER_A_TAIE_INTERRUPT_DISABLE,
             TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
             TIMER_A_DO_CLEAR

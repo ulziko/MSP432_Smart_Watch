@@ -13,7 +13,6 @@
 
 void alarm_adc(uint64_t status, uint16_t *conversionValues);
 void alarm_task(Graphics_Context *ctx);
-//void alarm_ta1_handler(void);
 void alarm_check(void);
 void alarm_button1_handler(void);   // S1 (P5.1)
 void alarm_button2_handler(void);   // S2 (P3.5)

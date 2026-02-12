@@ -10,25 +10,10 @@
 #include "LcdDriver/Crystalfontz128x128_ST7735.h"
 #include "LcdDriver/HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h"
 
-/* BoosterPack buttons */
-#define STOP_BUTTON_PORT   GPIO_PORT_P5    // S1
-#define STOP_BUTTON_PIN    GPIO_PIN1
-#define SNOOZE_BUTTON_PORT GPIO_PORT_P3    // S2
-#define SNOOZE_BUTTON_PIN  GPIO_PIN5
-
-/* Buzzer on P6.6 */
-#define BUZZER_TIMER_BASE   TIMER_A2_BASE
-#define BUZZER_CCR          TIMER_A_CAPTURECOMPARE_REGISTER_4
-#define BUZZER_PORT         GPIO_PORT_P2
-#define BUZZER_PIN          GPIO_PIN7
-#define BUZZER_HZ           2000u
-
 #define GRAPHICS_COLOR_NAVYBLUE 0x00363E69
-static uint16_t g_buzzerPeriod = 0;
 
 /* Snooze duration */
 const int g_snoozeMinutes = 1;
-
 
 /* Alarm time being edited by joystick */
 int g_hour   = 0;
@@ -94,7 +79,6 @@ void drawAlarmScreen(Graphics_Context *ctx)
 
     /* Clear message area (y ~ 24-52) */
     msgArea.xMin = 0;  msgArea.yMin = 24;
-//    msgArea.xMin = 0;  msgArea.yMin = 0;
     msgArea.xMax = 127; msgArea.yMax = 52;
     Graphics_setForegroundColor(ctx, GRAPHICS_COLOR_NAVYBLUE);
     Graphics_fillRectangle(ctx, &msgArea);
@@ -271,17 +255,6 @@ void alarm_adc(uint64_t status, uint16_t *conversionValues)
     }
 }
 
-//void alarm_ta1_handler(void)
-//{
-//    if (g_alarmSet && !g_alarmRinging &&
-//        ClockTime.hour == g_alarmHour &&
-//        ClockTime.minute == g_alarmMinute &&
-//        ClockTime.second == 0)
-//    {
-//        g_alarmRinging = 1;
-//        buzzerOn();
-//    }
-//}
 void alarm_check(void)
 {
     static uint8_t triggeredThisMinute = 0;
@@ -321,11 +294,11 @@ int16_t readJoystickY(void)
 
 void buttonsInit(void)
 {
-    GPIO_setAsInputPinWithPullUpResistor(STOP_BUTTON_PORT,   STOP_BUTTON_PIN);
-    GPIO_setAsInputPinWithPullUpResistor(SNOOZE_BUTTON_PORT, SNOOZE_BUTTON_PIN);
+    GPIO_setAsInputPinWithPullUpResistor( GPIO_PORT_P5,   GPIO_PIN1);
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P3, GPIO_PIN5);
 
-    g_prevStopButton   = GPIO_getInputPinValue(STOP_BUTTON_PORT,   STOP_BUTTON_PIN);
-    g_prevSnoozeButton = GPIO_getInputPinValue(SNOOZE_BUTTON_PORT, SNOOZE_BUTTON_PIN);
+    g_prevStopButton   = GPIO_getInputPinValue( GPIO_PORT_P5,   GPIO_PIN1);
+    g_prevSnoozeButton = GPIO_getInputPinValue(GPIO_PORT_P3, GPIO_PIN5);
 }
 
 
@@ -359,45 +332,29 @@ void alarm_button2_handler(void) // S2
     g_alarmSet    = 1;
 }
 
-/* Buzzer (Timer_A0 PWM) */
-
 void _buzzerInit(void)
 {
-    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(BUZZER_PORT, BUZZER_PIN,
-                                                GPIO_PRIMARY_MODULE_FUNCTION);
+    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN7,
+                                                    GPIO_PRIMARY_MODULE_FUNCTION);
 
     uint32_t smclk = MAP_CS_getSMCLK();
-    g_buzzerPeriod = (uint16_t)(smclk / BUZZER_HZ);
-
-    Timer_A_UpModeConfig up = {
-        TIMER_A_CLOCKSOURCE_SMCLK,
-        TIMER_A_CLOCKSOURCE_DIVIDER_1,
-        g_buzzerPeriod - 1,
-        TIMER_A_TAIE_INTERRUPT_DISABLE,
-        TIMER_A_CCIE_CCR0_INTERRUPT_DISABLE,
-        TIMER_A_DO_CLEAR
-    };
-
-    MAP_Timer_A_configureUpMode(BUZZER_TIMER_BASE, &up);
-    MAP_Timer_A_startCounter(BUZZER_TIMER_BASE, TIMER_A_UP_MODE);
-
     Timer_A_CompareModeConfig pwm = {
-        BUZZER_CCR,
+        TIMER_A_CAPTURECOMPARE_REGISTER_4,
         TIMER_A_CAPTURECOMPARE_INTERRUPT_DISABLE,
         TIMER_A_OUTPUTMODE_RESET_SET,
         0
     };
-    MAP_Timer_A_initCompare(BUZZER_TIMER_BASE, &pwm);
+    MAP_Timer_A_initCompare(TIMER_A0_BASE, &pwm);
+    MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);
 }
-
 void buzzerOn(void)
 {
-    MAP_Timer_A_setCompareValue(BUZZER_TIMER_BASE, BUZZER_CCR, g_buzzerPeriod / 2);
+    MAP_Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_4, 16000);
 }
 
 void buzzerOff(void)
 {
-    MAP_Timer_A_setCompareValue(BUZZER_TIMER_BASE, BUZZER_CCR, 0);
+    MAP_Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_4, 0);
 }
 
 
