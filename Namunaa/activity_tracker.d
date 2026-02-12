@@ -52,9 +52,6 @@ activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_4
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/devices/msp432p4xx/driverlib/flash.h
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
 activity_tracker.obj: C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/assert.h
-activity_tracker.obj: ../LcdDriver/Crystalfontz128x128_ST7735.h
-activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
-activity_tracker.obj: ../LcdDriver/HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h
 activity_tracker.obj: C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/math.h
 activity_tracker.obj: C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/_defs.h
 activity_tracker.obj: C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/machine/_limits.h
@@ -63,15 +60,17 @@ activity_tracker.obj: C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/inc
 activity_tracker.obj: ../activity_tracker.h
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
 activity_tracker.obj: ../system_time.h
-activity_tracker.obj: ../system_time.h
 activity_tracker.obj: ../tasks.h
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
 activity_tracker.obj: ../main_page.h
+activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
+activity_tracker.obj: ../LcdDriver/Crystalfontz128x128_ST7735.h
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
 activity_tracker.obj: ../time_display.h
 activity_tracker.obj: ../alarm.h
 activity_tracker.obj: C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h
 activity_tracker.obj: ../game.h
+activity_tracker.obj: ../system_time.h
 
 ../activity_tracker.c:
 
@@ -177,12 +176,6 @@ C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grli
 
 C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/assert.h:
 
-../LcdDriver/Crystalfontz128x128_ST7735.h:
-
-C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h:
-
-../LcdDriver/HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h:
-
 C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/math.h:
 
 C:/ti/ccs1280/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/_defs.h:
@@ -199,13 +192,15 @@ C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grli
 
 ../system_time.h:
 
-../system_time.h:
-
 ../tasks.h:
 
 C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h:
 
 ../main_page.h:
+
+C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h:
+
+../LcdDriver/Crystalfontz128x128_ST7735.h:
 
 C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h:
 
@@ -216,4 +211,6 @@ C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grli
 C:/Users/Dell/Desktop/embedded/simplelink_msp432p4_sdk_3_40_01_02/source/ti/grlib/grlib.h:
 
 ../game.h:
+
+../system_time.h:
 

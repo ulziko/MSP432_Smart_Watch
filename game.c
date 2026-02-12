@@ -6,72 +6,39 @@
 #include "game.h"
 #include <stdio.h>
 
-
-// toggle value for updating purpose
-volatile bool redraw = false;
-volatile bool init = false;
-volatile bool pipe_active = false;
-
-
-//constants
-#define GRAVITY        1
-#define FLAP_FORCE     5
-#define PIPE_SPEED     1
-#define SCREEN_HEIGHT  128
-#define SCREEN_WIDTH  128
-#define GROUND_Y       0
-#define PIPE_RANDOMNESS 4
-#define GAP_BETWEEN_PIPES 60
-
-// game score
-int score = 0;
-char score_string[10];
-
-// Pipe shifter value array
-volatile int pipe_index;
-int shifter[PIPE_RANDOMNESS]={-10, -50, -20, -40};
-
-
-//states
-GameState current_state= STATE_RESTART;
-
-
-////image declerations
-extern const Graphics_Image flappy_bird4BPP_UNCOMP[]; // 34x25 px
-// game over image
-extern const Graphics_Image  game_over4BPP_UNCOMP[]; //
-// upper road
-extern const Graphics_Image down_road4BPP_UNCOMP[]; //20x69 px
-// road down
-extern const Graphics_Image up_road4BPP_UNCOMP[]; //20x64 px
-// start button
-extern const Graphics_Image  start_button4BPP_UNCOMP[];
-
-
-
-
-
-typedef struct {
-    int x;
-    int y;
-    int old_x;
-    int old_y;
-    int w;
-    int h;
-} Sprite;
-
+// Sprite struct to represent the bird and pipes
 Sprite flappy;
 Sprite pipe1;
 Sprite pipe2;
 
+// toggle value for updating purpose
+volatile bool game_redraw=false;
+volatile bool pipe_active=false;
+volatile int score=0;
+volatile int pipe_index;
+volatile bool draw_screen_start_flag=true;
+volatile bool clear_screen_flag=false;
+
+// game score
+char score_string[10];
+const int shifter[PIPE_RANDOMNESS] = {-10, -50, -20, -40};
+
+// Game initial state
+GameState game_current_state= STATE_RESTART;
 
 
-
-
-void Init(Graphics_Context *pContext)
-{
-    Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_AQUA);
-    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
+/**
+ * @brief  Initialize game variables  and  sprite positions.
+ *
+ *
+ * @return Does not return a value.
+ *
+ * @note  This function sets the initial positions and dimensions of the flappy bird
+ *        and pipes, as well as initializes game state variables such as score and
+ *        pipe activity status.
+ */
+void Init()
+{   
     //Init flappy
     flappy.x = 47;
     flappy.y = 52;
@@ -98,14 +65,19 @@ void Init(Graphics_Context *pContext)
 
     // pipe calculation
     pipe_active=true;
-    redraw = false;
-    init = false;
+    game_redraw = false;
     pipe_index=0;
+    draw_screen_start_flag=true;
 
     // score restart
     score=0;
 }
 
+
+/**
+ * @brief  Restart the pipes by resetting their positions and updating the pipe index for randomness
+ *
+ */
 void restart_pipes(){
     // restart the value
     if (pipe_index>=PIPE_RANDOMNESS){
@@ -128,20 +100,35 @@ void redraw_game(Graphics_Context *pContext){
     GrImageDraw(pContext, up_road4BPP_UNCOMP, pipe1.x, pipe1.y);
     // draw lower road 1
     GrImageDraw(pContext, down_road4BPP_UNCOMP, pipe2.x, pipe2.y);
-
-
 }
 
-
+/**
+ * @brief  Draw the start screen with the flappy bird and start button
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the flappy bird
+ */
 void draw_screen_start(Graphics_Context *pContext){
+    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
     Graphics_clearDisplay(pContext);
     // flappy bird at the top
-    GrImageDraw(pContext, flappy_bird4BPP_UNCOMP, flappy.x, flappy.y);
+    GrImageDraw(pContext, flappy_bird4BPP_UNCOMP, 47, 52);
     // starting button of entering section
     GrImageDraw(pContext, start_button4BPP_UNCOMP, 39 , 80);
 }
 
-
+/**
+ * @brief  Draw the game over screen with the final score
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the flappy bird
+ */
 void draw_screen_game_over(Graphics_Context *pContext){
     Graphics_clearDisplay(pContext);
     Graphics_setForegroundColor(pContext, GRAPHICS_COLOR_ORANGE);
@@ -152,94 +139,183 @@ void draw_screen_game_over(Graphics_Context *pContext){
     Graphics_drawStringCentered(pContext, (int8_t*)score_string, AUTO_STRING_LENGTH, 64, 90, OPAQUE_TEXT);
 }
 
+/**
+ * @brief  Draw the get ready screen 
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function sets the background color to aqua, clears the display, and draws the get ready image
+ */
+void draw_screen_get_ready(Graphics_Context *pContext){
+    Graphics_setBackgroundColor(pContext, GRAPHICS_COLOR_AQUA);
+    Graphics_clearDisplay(pContext);
+    // image is in image.c
+    GrImageDraw(pContext, get_ready4BPP_UNCOMP, 16, 46);
+}
 
 
+/**
+ * @brief  Main game task handler that updates the game state and redraws the screen based on the current game state
+ *
+ * @param  pContext: Pointer to the graphics context used for drawing
+ * 
+ * @return Does not return a value.
+ *  
+ * @note  This function handles the main game loop, updating the positions of the flappy bird and pipes, checking for collisions, and managing the game state transitions between start, playing, and game over screens.
+ */
 void game_task(Graphics_Context *pContext)
 {
-    switch (current_state){
-    case STATE_GAME:
-        if(init){
-            current_state= STATE_RESTART;
+    switch (game_current_state){
+    case STATE_RESTART:
+    if (draw_screen_start_flag){
+        draw_screen_start(pContext);
+        draw_screen_start_flag=false;
+    }
+    game_current_state=STATE_START;
+        PCM_gotoLPM0();
+        break;
+    case STATE_INIT:
+        Init();
+        draw_screen_get_ready(pContext);
+        game_current_state=STATE_GET_READY;
+        break;
+    case STATE_PLAYING:
+        if (clear_screen_flag){
             Graphics_clearDisplay(pContext);
-            init=false;
+            clear_screen_flag=false;
         }
-        if (redraw){
+        if (game_redraw){
+            // Flapp bird will fall down by gravity.
+            flappy.old_y=flappy.y;
+            flappy.y+=GRAVITY;
+            // Pipes will move to the left by pipe speed.
             pipe1.x-=PIPE_SPEED;
             pipe2.x-=PIPE_SPEED;
+            // redraw the game 
             redraw_game(pContext);
-            redraw=false;
+            game_redraw=false;
             if (flappy.y <= 0 || flappy.y + flappy.h >= SCREEN_HEIGHT) {
                 draw_screen_game_over(pContext);
-                current_state = STATE_GAME_OVER;
+                game_current_state = STATE_GAME_OVER;
+                PCM_gotoLPM0();
             }
-            // flappy is within pipe area
+            // X axis: flappy is within pipe area
             if( flappy.x+flappy.w > pipe1.x && flappy.x <pipe1.x+pipe1.w){
                 // does flappy.low is lower than  pipe2's lower part.
                 //and flappy's upper y is greater than pipe1's lower part which indicates intersection
                 if ((flappy.y+ flappy.h) >pipe2.y || flappy.y<pipe1.y+pipe1.h){
                     draw_screen_game_over(pContext);
-                    current_state=STATE_GAME_OVER;
+                    game_current_state=STATE_GAME_OVER;
+                    PCM_gotoLPM0();
                 }
             }
-            //
+            // flappy has passed the pipe
             if (flappy.x > (pipe1.x+ pipe1.w) && pipe_active){
                 score+=1;
                 pipe_active=false;
             }
+            // if the pipe is out of the screen, restart the pipe
             if (pipe1.x<0){
                 Graphics_clearDisplay(pContext);
                 restart_pipes();
             }
         }
         break;
-    case STATE_RESTART:
-        Init(pContext);
-        draw_screen_start(pContext);
-        current_state=STATE_START;
-        break;
+
+    // ignores other states
     default:
         break;
     }
 }
 
 
+/**
+ * @brief  Game timer TA0 interrupt handler 
 
+ *  
+ * @note  This function toggles a value to draw redraw the game screen.
+ */
 void game_ta0_handler(void)
 {
-    if (current_state == STATE_GAME) {
-        redraw = true;
-        flappy.old_y=flappy.y;
-        flappy.y+=GRAVITY;
+    GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0);
+    // if the game is in playing state, update the position of the bird and set the redraw flag
+    if (game_current_state == STATE_PLAYING) {
+        game_redraw = true;
     }
 }
 
 
+/**
+ * @brief  Game timer TA1 interrupt handler 
+
+ *  
+ * @note  This function is used to control the get ready screen. 
+ */
+void game_ta1_handler(void)
+{
+    if (game_current_state == STATE_GET_READY) {
+        // after 3 seconds, start the game
+        static int counter = 0;
+        counter++;
+        if (counter >= 3) {
+            counter = 0;
+            clear_screen_flag=true;
+            game_current_state = STATE_PLAYING;
+        }   
+    }
+}
+
+
+/**
+ * @brief  Game button 1 interrupt handler
+
+ *  
+ * @note  Button 1 is used to start the game and make the bird flap. 
+ */
 void game_button1_handler()
 {
-    switch (current_state){
+    switch (game_current_state){
+    // button 1 is used to start the game when the game is in the start screen
     case STATE_START:
-        current_state=STATE_GAME;
+        game_current_state=STATE_INIT;
         break;
-    case STATE_GAME:
+    // button 1 is used to make the bird flap when the game is playing
+    case STATE_PLAYING:
        flappy.old_y=flappy.y;
        flappy.y-=FLAP_FORCE;
         break;
+    // ignores other states
     default:
         break;
     }
 }
 
+/**
+ * @brief  Game button 2 interrupt handler
 
+ *  
+ * @note  Button 2 is used to restart the game when the game is over.
+ */
 void game_button2_handler()
 {
-    switch (current_state){
-          case STATE_GAME_OVER:
-              current_state=STATE_RESTART;
-              break;
-          default:
-              break;
+    if (game_current_state==STATE_GAME_OVER){
+        // button 2 is used to restart the game when the game is over
+        draw_screen_start_flag=true;
+        game_current_state=STATE_RESTART;
     }
 }
 
 
 
+/**
+ * @brief  Game exit handler, called from the main menu
+
+ *  
+ * @note  This function resets the game state to restart and sets the flag to draw the start screen when exiting the game from the main menu.
+ */
+void game_exit_handler(){
+    draw_screen_start_flag=true;
+    game_current_state=STATE_RESTART;
+}

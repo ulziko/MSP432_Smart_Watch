@@ -126,6 +126,7 @@ void initTimer_TA_0() {
             TIMER_A_CLOCKSOURCE_SMCLK,
             TIMER_A_CLOCKSOURCE_DIVIDER_64,
             32767,
+
             TIMER_A_TAIE_INTERRUPT_DISABLE,
             TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
             TIMER_A_DO_CLEAR
@@ -255,8 +256,10 @@ void TA0_0_IRQHandler(void)
 void TA1_0_IRQHandler(void) {
     MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
     updateTime();
-    if (alarmTriggered())
+    if (alarmTriggered()) {
+        handlers[current_task].exit_handler();
         current_task = ALARM;
+    }
     handlers[current_task].ta1_handler();
 }
 
