@@ -43,8 +43,7 @@ typedef struct {
 
 //constants
 #define GRAVITY         1
-#define FLAP_FORCE      5
-#define PIPE_SPEED      1
+#define FLAP_FORCE      7
 #define SCREEN_HEIGHT   128
 #define SCREEN_WIDTH    128
 #define GROUND_Y        0
