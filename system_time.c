@@ -11,9 +11,9 @@ DateStruct ClockDate = {0, 0, 0, ""};
 void syncTime(){
        time_t current_time;
        current_time = time(NULL);
-       struct tm *t = localtime(&current_time);
+       struct tm *t = gmtime(&current_time);
        time ( &current_time );
-       ClockTime.hour = t->tm_hour;
+       ClockTime.hour = t->tm_hour+1;
        ClockTime.minute = t->tm_min;
        ClockTime.second = t->tm_sec;
 
