@@ -43,24 +43,18 @@ void Init()
     //Init flappy
     flappy.x = 47;
     flappy.y = 52;
-    flappy.old_x=47;
-    flappy.old_y=52;
     flappy.w=30;
     flappy.h=25;
 
     //Init pipe1
     pipe1.x=148;
     pipe1.y=-20;
-    pipe1.old_x=148;
-    pipe1.old_y=0;
     pipe1.w=20;
     pipe1.h=84;
 
     //Init pipe2
     pipe2.x=148;
     pipe2.y=117;
-    pipe2.old_x=148;
-    pipe2.old_y=117;
     pipe2.w=20;
     pipe2.h=92;
 
@@ -190,8 +184,6 @@ void game_task(Graphics_Context *pContext)
             clear_screen_flag=false;
         }
         if (game_redraw){
-            // Flapp bird will fall down by gravity.
-            flappy.old_y=flappy.y;
             flappy.y+=GRAVITY;
             // Pipes will move to the left by pipe speed.
             pipe1.x-=pipe_speed;
@@ -296,7 +288,6 @@ void game_button1_handler()
         break;
     // button 1 is used to make the bird flap when the game is playing
     case STATE_PLAYING:
-       flappy.old_y=flappy.y;
        flappy.y-=FLAP_FORCE;
         break;
     // ignores other states
