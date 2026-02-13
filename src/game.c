@@ -14,15 +14,16 @@ Sprite pipe2;
 // toggle value for updating purpose
 volatile bool game_redraw=false;
 volatile bool pipe_active=false;
-volatile int score=0;
-volatile int pipe_index;
+volatile int score;
 volatile int  pipe_speed;
 volatile bool draw_screen_start_flag=true;
 volatile bool clear_screen_flag=false;
+volatile int16_t entropy;
+volatile int16_t seed;
 
 // game score
 char score_string[10];
-const int shifter[PIPE_RANDOMNESS] = {-10, -50, -20, -40};
+// const int shifter[PIPE_RANDOMNESS] = {-10, -50, -20, -40};
 
 // Game initial state
 GameState game_current_state= STATE_RESTART;
@@ -41,27 +42,26 @@ GameState game_current_state= STATE_RESTART;
 void Init()
 {   
     //Init flappy
-    flappy.x = 47;
-    flappy.y = 52;
+    flappy.x=47;
+    flappy.y=52;
     flappy.w=30;
     flappy.h=25;
 
     //Init pipe1
-    pipe1.x=148;
-    pipe1.y=-20;
-    pipe1.w=20;
-    pipe1.h=84;
+    pipe1.x=SCREEN_WIDTH+pipe1.w;
+    pipe1.y= PIPE_OFFSET-(seed % MAX_RANDOM_VALUE);
+    pipe1.w=PIPE_WIDTH;
+    pipe1.h=PIPE_HEIGHT;
 
     //Init pipe2
-    pipe2.x=148;
-    pipe2.y=117;
-    pipe2.w=20;
-    pipe2.h=92;
+    pipe2.x=SCREEN_WIDTH+pipe2.w;
+    pipe2.y=pipe1.y+PIPE_HEIGHT+GAP_BETWEEN_PIPES;
+    pipe2.w=PIPE_WIDTH;
+    pipe2.h=PIPE_HEIGHT;
 
     // pipe calculation
     pipe_active=true;
     game_redraw = false;
-    pipe_index=0;
     draw_screen_start_flag=true;
 
     // score restart
@@ -71,24 +71,18 @@ void Init()
 
 
 /**
- * @brief  Restart the pipes by resetting their positions and updating the pipe index for randomness
+ * @brief  Uses random seed to set the initial position of the pipes when we restart the pipes.
  *
  */
 void restart_pipes(){
-    // restart the value
-    if (pipe_index>=PIPE_RANDOMNESS){
-        pipe_index=0;
-    }
-    else{
-        pipe1.y=shifter[pipe_index];
-        pipe2.y=pipe1.y+pipe1.h+GAP_BETWEEN_PIPES;
-    }
+    // random pipe position by using the timer value as entropy.
+    pipe1.y= PIPE_OFFSET-(seed % MAX_RANDOM_VALUE);
+    pipe2.y=pipe1.y+pipe1.h+GAP_BETWEEN_PIPES;
     pipe1.x=SCREEN_WIDTH+pipe1.w;
     pipe2.x=SCREEN_WIDTH+pipe2.w;
-
     pipe_active=true;
-    pipe_index++;
 }
+
 
 void redraw_game(Graphics_Context *pContext){
     // draw flappy bird
@@ -96,7 +90,7 @@ void redraw_game(Graphics_Context *pContext){
     //draw upper road 1
     GrImageDraw(pContext, up_road4BPP_UNCOMP, pipe1.x, pipe1.y);
     // draw lower road 1
-    GrImageDraw(pContext, down_road4BPP_UNCOMP, pipe2.x, pipe2.y);
+     GrImageDraw(pContext, down_road4BPP_UNCOMP, pipe2.x, pipe2.y);
 }
 
 /**
@@ -234,7 +228,6 @@ void game_task(Graphics_Context *pContext)
  */
 void game_ta0_handler(void)
 {
-    GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0);
     // if the game is in playing state, update the position of the bird and set the redraw flag
     if (game_current_state == STATE_PLAYING) {
         game_redraw = true;
@@ -261,8 +254,8 @@ void game_ta1_handler(void)
         }
         break;
     case STATE_PLAYING:
-        if (counter >= 20) {
-            pipe_speed++;
+        if (counter >= 40) {
+//            pipe_speed++;
         }
         // gravity will be more effective every 30 seconds to make the game more difficult
         else if (counter >= 30) { 
@@ -281,6 +274,9 @@ void game_ta1_handler(void)
  */
 void game_button1_handler()
 {
+    // uses timer A1 value as a entropy to update random seed for pipe position. 
+    entropy = MAP_Timer_A_getCounterValue(TIMER_A1_BASE);
+    seed ^= (entropy & 0xFF);
     switch (game_current_state){
     // button 1 is used to start the game when the game is in the start screen
     case STATE_START:

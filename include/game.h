@@ -44,10 +44,11 @@ typedef struct {
 #define FLAP_FORCE      7
 #define SCREEN_HEIGHT   128
 #define SCREEN_WIDTH    128
-#define GROUND_Y        0
-#define PIPE_RANDOMNESS 4
 #define GAP_BETWEEN_PIPES 60
-
+#define MAX_RANDOM_VALUE 48
+#define PIPE_HEIGHT 68
+#define PIPE_OFFSET -10
+#define PIPE_WIDTH 20
 
 
 ////image declerations
@@ -59,7 +60,7 @@ extern const Graphics_Image  game_over4BPP_UNCOMP[]; //
 // upper road
 extern const Graphics_Image down_road4BPP_UNCOMP[]; //20x69 px
 // road down
-extern const Graphics_Image up_road4BPP_UNCOMP[]; //20x64 px
+extern const Graphics_Image up_road4BPP_UNCOMP[]; //30x84 px
 // start button
 extern const Graphics_Image  start_button4BPP_UNCOMP[];
 
