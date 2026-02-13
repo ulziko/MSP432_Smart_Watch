@@ -21,12 +21,8 @@ Future improvements include adding memory for long‑term data storage and displ
 ## **Hardware**
 - **MSP432P401R LaunchPad**
 - <img width="640" height="360" alt="image" src="https://github.com/user-attachments/assets/b6aee0a4-1ea8-49de-83c9-2afcc729426a" />
-<img width="640" height="360" alt="image" src="https://github.com/user-attachments/assets/b6aee0a4-1ea8-49de-83c9-2afcc729426a" />
-
 - **Educational BoosterPack MKII**
 - <img width="1420" height="798" alt="image" src="https://github.com/user-attachments/assets/c6a09722-b8ed-468f-9f78-e086633c634a" />
-<img width="1420" height="798" alt="image" src="https://github.com/user-attachments/assets/c6a09722-b8ed-468f-9f78-e086633c634a" />
-
 
 
 ## **Getting Started**
