@@ -74,8 +74,6 @@ Smart Watch/
 │   ├── main_page.c                              # Main watch page logic
 │   ├── tasks.c                                  # Task scheduler implementation
 │   ├── time_display.c                           # Time display logic
-│
-├── msp432_code/
 │   └── main.c                                   # Main program entry point
 │
 ├── .ccsproject                                  # CCS project metadata
