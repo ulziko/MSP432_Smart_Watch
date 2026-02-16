@@ -20,10 +20,10 @@ volatile bool draw_screen_start_flag=true;
 volatile bool clear_screen_flag=false;
 volatile int16_t entropy;
 volatile int16_t seed;
+volatile int16_t gravity=1;
 
 // game score
 char score_string[10];
-// const int shifter[PIPE_RANDOMNESS] = {-10, -50, -20, -40};
 
 // Game initial state
 GameState game_current_state= STATE_RESTART;
@@ -193,7 +193,8 @@ void game_task(Graphics_Context *pContext)
             // X axis: flappy is within pipe area
             if( flappy.x+flappy.w > pipe1.x && flappy.x <pipe1.x+pipe1.w){
                 // does flappy.low is lower than  pipe2's lower part.
-                //and flappy's upper y is greater than pipe1's lower part which indicates intersection
+                //and flappy's upper y is greater than pipe1's lower
+                // part which indicates intersection
                 if ((flappy.y+ flappy.h) >pipe2.y || flappy.y<pipe1.y+pipe1.h){
                     draw_screen_game_over(pContext);
                     game_current_state=STATE_GAME_OVER;
@@ -255,15 +256,19 @@ void game_ta1_handler(void)
         break;
     case STATE_PLAYING:
         if (counter >= 40) {
-//            pipe_speed++;
+            counter = 0;  
+            pipe_speed++;
         }
         // gravity will be more effective every 30 seconds to make the game more difficult
         else if (counter >= 30) { 
-            
+            gravity++;
         }
+        break;
+    default:
+            break;
+}
    
     }
-}
 
 
 /**
@@ -274,7 +279,8 @@ void game_ta1_handler(void)
  */
 void game_button1_handler()
 {
-    // uses timer A1 value as a entropy to update random seed for pipe position. 
+    // uses timer A1 value as a entropy
+    //to update random seed for pipe position.
     entropy = MAP_Timer_A_getCounterValue(TIMER_A1_BASE);
     seed ^= (entropy & 0xFF);
     switch (game_current_state){
