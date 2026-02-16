@@ -6,9 +6,9 @@
 
 ## **Introduction**
 This project implements a fully independent, low‑power smartwatch on the MSP432 LaunchPad and Educational BoosterPack MKII.  
-The system provides essential daily functionalities such as time and date display, alarm management, a simple game, and an activity tracker based on accelerometer data.
+The system provides essential daily functionalities such as time and date display, alarm management, a flappy bird game, and an activity tracker based on accelerometer data.
 
-Future improvements include adding memory for long‑term data storage and displaying user statistics over time.
+Future improvements include adding memory for long‑term data storage, displaying user statistics over time and adding settings for user preferences.
 
 
 ## **Features**
@@ -18,26 +18,69 @@ Future improvements include adding memory for long‑term data storage and displ
 - **Activity Tracker** with step counting and progress bar visualization  
 
 
-## **Hardware**
-- **MSP432P401R LaunchPad**
-- <img width="640" height="360" alt="image" src="https://github.com/user-attachments/assets/b6aee0a4-1ea8-49de-83c9-2afcc729426a" />
-- **Educational BoosterPack MKII**
-- <img width="1420" height="798" alt="image" src="https://github.com/user-attachments/assets/c6a09722-b8ed-468f-9f78-e086633c634a" />
+
+## **Build Requirements**
+
+### **Hardware**
+
+1. **MSP432P401R LaunchPad Development Kit**
+
+<img src="./doc_images/msp432-board.png" width="400px" alt="MSP432 Board">
+
+2. **Educational Booster Pack (BOOSTXL-EDUMKII)**
+
+<img src="./doc_images/booster-pack.png" width="400px" alt="MSP432 Board">
+
+### **Software**
+ 
+The development environment requires:
+
+- **[Code Composer Studio (CCS)](https://www.ti.com/tool/CCSTUDIO)** v12.0 or later
+
+- **[SimpleLink MSP432P4 SDK](https://www.ti.com/tool/SIMPLELINK-MSP432-SDK)**
 
 
-## **Getting Started**
+## **Running the Project**
+### Step 1: Install Development Tools
 
-### **Installation**
-Clone the repository:
+1. Download and install [Code Composer Studio](https://www.ti.com/tool/CCSTUDIO)
+2. During installation, ensure the SimpleLink MSP432 SDK is selected
+3. Connect your MSP432 board to your computer via USB
+4. Verify the XDS110 debugger is recognized by your system
+
+### Step 2: Clone the Repository
+
 ```bash
-git clone https://github.com/ulziko/MSP432_Smart_Watch
+# Clone the project repository
+$ git clone https://github.com/your-username/msp432-smartwatch.git
+$ cd msp432-smartwatch
 ```
 
-### **Running the Project**
-1. Open the project in **Code Composer Studio (CCS)**.  
-2. Ensure the **SimpleLink MSP432P4 SDK** is installed and linked.  
-3. Connect the MSP432 LaunchPad with the BoosterPack MKII attached.  
-4. Build and flash the project onto the board.  
+### Step 3: Import Project into CCS
+
+1. Launch Code Composer Studio
+2. Go to **File → Import → Code Composer Studio → CCS Projects**
+3. Browse to the cloned repository directory
+4. Select the `CCS_PROJECT` folder
+5. Click **Finish** to import the project
+
+### Step 4: Configure SDK Path
+
+If the SimpleLink SDK is not automatically detected:
+
+1. Right-click on the project in Project Explorer
+2. Select **Properties → Build → ARM Compiler → Include Options**
+3. Add the SDK include path: `${TI_SDK_ROOT}/simplelink_msp432p4_sdk/source`
+4. Also add `${PROJECT_ROOT}/include` path to find project specific header files 
+5. Repeat for **ARM Linker → File Search Path** with library paths
+
+
+### Step 5: Flash and Run
+
+1. Ensure the MSP432 board is connected via USB
+2. In CCS, click the **Debug** button (or press F11)
+3. The firmware will be flashed to the device automatically
+4. Click **Resume** to start execution
 
 ---
 
@@ -64,7 +107,6 @@ Smart Watch/
 │   ├── msp432p401r.cmd                          # Linker command file
 │   ├── startup_msp432p401r_ccs.c                # Startup code & interrupt vectors
 │   ├── system_msp432p401r.c                     # System initialization
-│   ├── system_time.c                            # System timekeeping implementation
 │
 ├── src/                                         # Application source code
 │   ├── activity_tracker.c                       # Step detection algorithm
@@ -73,6 +115,7 @@ Smart Watch/
 │   ├── images.c                                 # LCD image assets
 │   ├── main_page.c                              # Main watch page logic
 │   ├── tasks.c                                  # Task scheduler implementation
+│   ├── system_time.c                            # System timekeeping implementation
 │   ├── time_display.c                           # Time display logic
 │   └── main.c                                   # Main program entry point
 │
@@ -89,22 +132,17 @@ The project is structured around modular C components, separating UI, sensor pro
 A task‑based scheduler coordinates periodic updates, while interrupts handle real‑time events such as button presses and timer ticks.
 
 
-## **Build Requirements**
-
-### **Hardware**
-- MSP432P401R LaunchPad  
-- Educational BoosterPack MKII  
-- Computer capable of flashing binaries  
-
-### **Software**
-- Code Composer Studio (CCS)  
-- SimpleLink MSP432P4 SDK  
-- Git (optional, for version control)
-
-
 ## **Development Notes**
 When adding new tasks, it is recommended to register them inside the **handlers array** in `tasks.c` rather than defining new interrupt handlers.  
 This avoids redefinition conflicts and keeps the system’s scheduling structure clean and maintainable.
+
+
+## **Team Contributions**
+- **Raffaelle Cella** – Main page & task dispatching.
+- **Namuunaa Boldbayar** –  Alarm application.
+- **Emuujin Myagmar** –  Activity tracker.
+- **Ulziikhishig Myagmarsuren** – System time & Flappy bird game. 
+
 
 
 ## **Links**
